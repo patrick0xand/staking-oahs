@@ -1,0 +1,686 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0xaA6f67882a9C4C0D15F8c3c197a1464e3F29EF68",
+      "txHash": "0x7f732fd71d18607afa1b8e7aea82bf78b8d6a1b44b4085653ebd43509a54373f",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "58bbad11e31c57df4cb0179df1c405e36502fedd5cb10a0f37031d78483c4657": {
+      "address": "0x7859cd31E741dC80154503acABC9c07e6a50E996",
+      "txHash": "0x344f344d14090a2cc643f5b8a9fc9fbc02cd589e145528ec88b21c69b5374091",
+      "layout": {
+        "solcVersion": "0.8.18",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "_status",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "ReentrancyGuardUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:88"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ERC1967UpgradeUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:169"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "UUPSUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:111"
+          },
+          {
+            "label": "numPairs",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_uint16",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:167"
+          },
+          {
+            "label": "markets",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_mapping(t_uint16,t_struct(Market)10083_storage)",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:170"
+          },
+          {
+            "label": "_assetRegistry",
+            "offset": 0,
+            "slot": "153",
+            "type": "t_struct(Storage)8221_storage",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:172"
+          },
+          {
+            "label": "_completedOrderHashes",
+            "offset": 0,
+            "slot": "157",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:173"
+          },
+          {
+            "label": "_partiallyFilledOrderQuantities",
+            "offset": 0,
+            "slot": "158",
+            "type": "t_mapping(t_bytes32,t_uint256)",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:174"
+          },
+          {
+            "label": "g_status",
+            "offset": 0,
+            "slot": "159",
+            "type": "t_mapping(t_bytes32,t_enum(OrderStatus)10026)",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:177"
+          },
+          {
+            "label": "_walletExits",
+            "offset": 0,
+            "slot": "160",
+            "type": "t_mapping(t_address,t_struct(WalletExit)12349_storage)",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:179"
+          },
+          {
+            "label": "_chainPropagationPeriod",
+            "offset": 0,
+            "slot": "161",
+            "type": "t_uint256",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:180"
+          },
+          {
+            "label": "_dispatcherWallet",
+            "offset": 0,
+            "slot": "162",
+            "type": "t_address",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:181"
+          },
+          {
+            "label": "_feeWallet",
+            "offset": 0,
+            "slot": "163",
+            "type": "t_address",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:182"
+          },
+          {
+            "label": "_admin",
+            "offset": 0,
+            "slot": "164",
+            "type": "t_address",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:183"
+          },
+          {
+            "label": "addressConfig",
+            "offset": 0,
+            "slot": "165",
+            "type": "t_struct(AddressConfig)12354_storage",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:185"
+          },
+          {
+            "label": "totalHelds",
+            "offset": 0,
+            "slot": "167",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:187"
+          },
+          {
+            "label": "increasePositionRequestKeys",
+            "offset": 0,
+            "slot": "168",
+            "type": "t_array(t_bytes32)dyn_storage",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:189"
+          },
+          {
+            "label": "decreasePositionRequestKeys",
+            "offset": 0,
+            "slot": "169",
+            "type": "t_array(t_bytes32)dyn_storage",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:190"
+          },
+          {
+            "label": "increasePositionRequestKeysStart",
+            "offset": 0,
+            "slot": "170",
+            "type": "t_uint256",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:192"
+          },
+          {
+            "label": "decreasePositionRequestKeysStart",
+            "offset": 0,
+            "slot": "171",
+            "type": "t_uint256",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:193"
+          },
+          {
+            "label": "increasePositionsIndex",
+            "offset": 0,
+            "slot": "172",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:195"
+          },
+          {
+            "label": "increasePositionRequests",
+            "offset": 0,
+            "slot": "173",
+            "type": "t_mapping(t_bytes32,t_struct(IncreasePositionRequest)12379_storage)",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:196"
+          },
+          {
+            "label": "decreasePositionsIndex",
+            "offset": 0,
+            "slot": "174",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:198"
+          },
+          {
+            "label": "decreasePositionRequests",
+            "offset": 0,
+            "slot": "175",
+            "type": "t_mapping(t_bytes32,t_struct(DecreasePositionRequest)12406_storage)",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:199"
+          },
+          {
+            "label": "nonce",
+            "offset": 0,
+            "slot": "176",
+            "type": "t_uint256",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:201"
+          },
+          {
+            "label": "dispatcherWallets",
+            "offset": 0,
+            "slot": "177",
+            "type": "t_mapping(t_address,t_bool)",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:202"
+          },
+          {
+            "label": "callCoinPermit",
+            "offset": 0,
+            "slot": "178",
+            "type": "t_address",
+            "contract": "VDexStorage",
+            "src": "contracts/storage/VDexStorage.sol:203"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_bytes32)dyn_storage": {
+            "label": "bytes32[]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(LPoolStorage)12130": {
+            "label": "contract LPoolStorage",
+            "numberOfBytes": "20"
+          },
+          "t_enum(OrderStatus)10026": {
+            "label": "enum Types.OrderStatus",
+            "members": [
+              "Null",
+              "CANCELLED",
+              "EXPIRED",
+              "FILLABLE",
+              "FULLY_FILLED"
+            ],
+            "numberOfBytes": "1"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(Asset)10046_storage)": {
+            "label": "mapping(address => struct Types.Asset)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_struct(WalletExit)12349_storage)": {
+            "label": "mapping(address => struct VDexStorage.WalletExit)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_enum(OrderStatus)10026)": {
+            "label": "mapping(bytes32 => enum Types.OrderStatus)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(DecreasePositionRequest)12406_storage)": {
+            "label": "mapping(bytes32 => struct VDexStorage.DecreasePositionRequest)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(IncreasePositionRequest)12379_storage)": {
+            "label": "mapping(bytes32 => struct VDexStorage.IncreasePositionRequest)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_uint256)": {
+            "label": "mapping(bytes32 => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint16,t_struct(Market)10083_storage)": {
+            "label": "mapping(uint16 => struct Types.Market)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_struct(Asset)10046_storage)": {
+            "label": "mapping(uint256 => struct Types.Asset)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_struct(AddressConfig)12354_storage": {
+            "label": "struct VDexStorage.AddressConfig",
+            "members": [
+              {
+                "label": "factory",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "wETH",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_struct(Asset)10046_storage": {
+            "label": "struct Types.Asset",
+            "members": [
+              {
+                "label": "exists",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "assetAddress",
+                "type": "t_address",
+                "offset": 1,
+                "slot": "0"
+              },
+              {
+                "label": "symbol",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "decimals",
+                "type": "t_uint8",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "isConfirmed",
+                "type": "t_bool",
+                "offset": 1,
+                "slot": "2"
+              },
+              {
+                "label": "confirmedTimestampInMs",
+                "type": "t_uint64",
+                "offset": 2,
+                "slot": "2"
+              }
+            ],
+            "numberOfBytes": "96"
+          },
+          "t_struct(DecreasePositionRequest)12406_storage": {
+            "label": "struct VDexStorage.DecreasePositionRequest",
+            "members": [
+              {
+                "label": "account",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "depositToken",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "indexToken",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "collateralDelta",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "sizeDelta",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "isLong",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "receiver",
+                "type": "t_address",
+                "offset": 1,
+                "slot": "5"
+              },
+              {
+                "label": "acceptablePrice",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "minOut",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "executionFee",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "blockNumber",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "9"
+              },
+              {
+                "label": "blockTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "10"
+              },
+              {
+                "label": "withdrawETH",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "11"
+              }
+            ],
+            "numberOfBytes": "384"
+          },
+          "t_struct(IncreasePositionRequest)12379_storage": {
+            "label": "struct VDexStorage.IncreasePositionRequest",
+            "members": [
+              {
+                "label": "account",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "depositToken",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "indexToken",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "amountIn",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "minOut",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "sizeDelta",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              },
+              {
+                "label": "isLong",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "6"
+              },
+              {
+                "label": "acceptablePrice",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "7"
+              },
+              {
+                "label": "executionFee",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "8"
+              },
+              {
+                "label": "blockNumber",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "9"
+              },
+              {
+                "label": "blockTime",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "10"
+              },
+              {
+                "label": "hasCollateralInETH",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "11"
+              }
+            ],
+            "numberOfBytes": "384"
+          },
+          "t_struct(Market)10083_storage": {
+            "label": "struct Types.Market",
+            "members": [
+              {
+                "label": "pool",
+                "type": "t_contract(LPoolStorage)12130",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "token0",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "token1",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "marginLimit",
+                "type": "t_uint16",
+                "offset": 20,
+                "slot": "2"
+              },
+              {
+                "label": "priceUpdater",
+                "type": "t_address",
+                "offset": 0,
+                "slot": "3"
+              },
+              {
+                "label": "pool0Insurance",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "4"
+              },
+              {
+                "label": "pool1Insurance",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "5"
+              }
+            ],
+            "numberOfBytes": "192"
+          },
+          "t_struct(Storage)8221_storage": {
+            "label": "struct AssetRegistry.Storage",
+            "members": [
+              {
+                "label": "assetsByAddress",
+                "type": "t_mapping(t_address,t_struct(Asset)10046_storage)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "numMarkets",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              },
+              {
+                "label": "markets",
+                "type": "t_mapping(t_uint256,t_struct(Asset)10046_storage)",
+                "offset": 0,
+                "slot": "2"
+              },
+              {
+                "label": "nativeAssetSymbol",
+                "type": "t_string_storage",
+                "offset": 0,
+                "slot": "3"
+              }
+            ],
+            "numberOfBytes": "128"
+          },
+          "t_struct(WalletExit)12349_storage": {
+            "label": "struct VDexStorage.WalletExit",
+            "members": [
+              {
+                "label": "exists",
+                "type": "t_bool",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "effectiveBlockNumber",
+                "type": "t_uint256",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint64": {
+            "label": "uint64",
+            "numberOfBytes": "8"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    }
+  }
+}
