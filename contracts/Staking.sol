@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity >=0.8.24;
+pragma solidity >=0.8.25;
+
+// import "hardhat/console.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -40,7 +43,8 @@ contract Storage {
 
     // Values
     mapping(address => Stake) public stakes; // pairId => Stake
-    mapping(uint256 => UserStake) public userStakes; // id => UserStake[]
+    Stake[] public poolInfo;
+    mapping(uint256 => mapping(address => UserStake)) public userStakes; // id => user => UserStake
     uint256 internal userStakeId;
     address public OahToken;
     // Structs
@@ -49,6 +53,7 @@ contract Storage {
         address stakeToken;
         uint256 convertRate; // 300 = 0.3 : 1 payToken = 0.3 receiveToken
         uint256 interestRate; // 1000 = 10%
+        Period period;
         bool isActive;
     }
 
@@ -75,15 +80,17 @@ contract Storage {
 
     // Events
     event StakesChanged(Stake[] _stakes);
-    event UserStaked(uint256 id, UserStake _userStake);
-    event UserWithdrew(uint256 id, UserStake _userStake);
-    event UserClaimed(uint256 id, uint256 claimedAmount);
+    event UserStaked(address indexed user, uint256 indexed pid, uint256 amount);
+    event UserWithdrew(address indexed user, uint256 indexed pid, uint256 amount);
+    event UserClaimed(uint256 id, address indexed wallet, address indexed rewardToken, uint256 claimedAmount);
+
+    uint48 public constant MAX_TIME = type(uint48).max; // = 2^48 - 1
 
     // Functions
     function calculateTotalInterest(Period period, uint256 interestRate, uint256 amount)
-        public
-        view
-        returns (uint256)
+    public
+    view
+    returns (uint256)
     {
         uint256 timeElapsed = 7; // days
         if (period == Period.Days_30) {
@@ -98,7 +105,7 @@ contract Storage {
     }
 }
 
-contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Storage {
+contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable, Storage {
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -107,6 +114,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, St
     function initialize(address _owner, address _oahToken) external initializer {
         __Ownable_init();
         __Pausable_init();
+        __ReentrancyGuard_init();
         userStakeId = 0;
         OahToken = _oahToken;
         transferOwnership(_owner);
@@ -125,11 +133,26 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, St
         SECONDS_IN_ONE_DAY = 24 * 60 * 60;
     }
 
+    function toUint48(uint256 value) internal pure returns (uint48) {
+        require(value <= type(uint48).max, "value doesn't fit in 48 bits");
+        return uint48(value);
+    }
+
+    function toUint160(uint256 value) internal pure returns (uint160) {
+        require(value <= type(uint160).max, "value doesn't fit in 160 bits");
+        return uint160(value);
+    }
+
+    function getUnlockTime(uint256 _pid, address _staker) public view returns (uint48 unlockTime) {
+        return userStakes[_pid][_staker].stakeAmount > 0 ? toUint48(userStakes[_pid][_staker].withdrawTime) : MAX_TIME;
+    }
+
     // Config functions
     function setStakes(Stake[] calldata _stake) external onlyOwner {
         for (uint256 i = 0; i < _stake.length; i++) {
             Stake memory stake = _stake[i];
             stakes[stake.stakeToken] = stake;
+            poolInfo.push(stake);
         }
 
         emit StakesChanged(_stake);
@@ -143,9 +166,56 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, St
         _unpause();
     }
 
+    function userClaimableRewards(uint256 _pid, address _staker) public view returns (uint256) {
+        Stake storage stake = poolInfo[_pid];
+        UserStake storage user = userStakes[_pid][_staker];
+        if (block.timestamp <= user.startDate) return 0;
+        uint256 timeElapsed = 7 days; // days
+        if (stake.period == Period.Days_30) {
+            timeElapsed = 30 days;
+        } else if (stake.period == Period.Days_60) {
+            timeElapsed = 60 days;
+        }
+        uint48 stakeRewardEndTime = toUint48(user.startDate + timeElapsed);
+
+        if (block.timestamp <= stakeRewardEndTime) {
+            return 0;
+        } else {
+            return calculateTotalInterest(stake.period, stake.interestRate, user.stakeAmount);
+        }
+    }
+
+    function getEarnedRewardTokens(uint256 _pid, address _staker) public view returns (uint256 claimableRewardTokens) {
+//        if (address(OahToken) == address(0) || stakeRewardFactor == 0) {
+//            return 0;
+//        } else {        // day elapsed from nearest withdrawTime
+        UserStake storage userStake = userStakes[_pid][_staker];
+        uint256 daysElapsed = (block.timestamp - userStake.startDate) / SECONDS_IN_ONE_DAY - userStake.withdrawTime;
+        require(daysElapsed > 0, ERR_NO_INTEREST_TO_WITHDRAW);
+
+        uint256 dailyInterest = userStake.interestRate * userStake.receiveAmount / (365 * BASE_CONVERT);
+        return dailyInterest * daysElapsed;
+//        }
+    }
+
     // User functions
-    function newStake(address _stakeToken, uint256 _amount, Period _period) public payable whenNotPaused {
-        Stake memory stake = stakes[_stakeToken];
+    function _updateRewards(uint256 _pid, address _staker) internal returns (UserStake storage userStake) {
+        Stake storage stake = poolInfo[_pid];
+        // calculate reward credits using previous staking amount and previous time period
+        // add new reward credits to already accumulated reward credits
+        userStake = userStakes[_pid][_staker];
+        uint256 totalInterest = calculateTotalInterest(stake.period, stake.interestRate, userStake.stakeAmount);
+        userStake.interestAmount += totalInterest;
+
+        // update stake Time to current time (start new reward period)
+        // will also reset userClaimableRewards()
+        userStake.startDate = toUint48(block.timestamp);
+    }
+
+    function newStake(uint256 _pid, uint256 _amount) external nonReentrant payable whenNotPaused {
+        require(_amount > 0, "stake amount must be > 0");
+
+        Stake storage stake = poolInfo[_pid];
         require(stake.isActive, ERR_STAKE_NOT_ACTIVE);
         IERC20Upgradeable stakeToken = IERC20Upgradeable(stake.stakeToken);
 
@@ -156,30 +226,32 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, St
         }
 
         uint256 receiveAmount = stake.convertRate * _amount / BASE_CONVERT;
-        uint256 totalInterest = calculateTotalInterest(_period, stake.interestRate, _amount);
-        uint256 id = userStakeId++;
-        UserStake memory userStake = UserStake({
-            user: msg.sender,
-            stakeToken: stake.stakeToken,
-            stakeAmount: _amount,
-            receiveAmount: receiveAmount,
-            interestAmount: totalInterest,
-            interestRate: stake.interestRate,
-            period: _period,
-            startDate: block.timestamp,
-            interestWithdrew: 0,
-            withdrawTime: 0,
-            completed: false
-        });
-        userStakes[id] = userStake;
 
-        emit UserStaked(id, userStake);
+        UserStake storage userStake = _updateRewards(_pid, msg.sender); // update rewards and return reference to user
+
+        userStake.stakeAmount = toUint160(userStake.stakeAmount + _amount);
+
+        uint256 timeElapsed = 7 days; // days
+        if (stake.period == Period.Days_30) {
+            timeElapsed = 30 days;
+        } else if (stake.period == Period.Days_60) {
+            timeElapsed = 60 days;
+        }
+        userStake.withdrawTime = toUint48(block.timestamp + timeElapsed);
+
+        emit UserStaked(msg.sender, _pid, _amount);
     }
 
-    function withdraw(uint256 id) public payable {
-        UserStake storage userStake = userStakes[id];
+    function withdraw(uint256 _pid, uint256 _amount) external nonReentrant {
+        require(_amount > 0, "amount to withdraw not > 0");
+        require(block.timestamp > getUnlockTime(_pid, msg.sender), "staked tokens are still locked");
+
+        UserStake storage userStake = _updateRewards(_pid, msg.sender); // update rewards and return reference to user
+
+        require(_amount <= userStake.stakeAmount, "withdraw amount > staked amount");
         require(!userStake.completed, ERR_USER_STAKE_COMPLETED);
         require(userStake.user == msg.sender, ERR_INVALID_USER_STAKE_OWNER);
+        userStake.stakeAmount -= toUint160(_amount);
 
         if (userStake.stakeToken == address(0)) {
             payable(msg.sender).transfer(userStake.stakeAmount);
@@ -188,65 +260,29 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, St
             stakeToken.transfer(msg.sender, userStake.stakeAmount);
         }
 
-        userStake.completed = true;
-        emit UserWithdrew(id, userStake);
+        emit UserWithdrew(msg.sender, _pid, _amount);
     }
 
-    function claim(uint256 id) public payable {
-        UserStake storage userStake = userStakes[id];
+    function claim(uint256 _pid) external nonReentrant {
+        require(OahToken != address(0), "no reward token contract");
+        UserStake storage userStake = userStakes[_pid][msg.sender];
         require(!userStake.completed, ERR_USER_STAKE_COMPLETED);
         require(userStake.user == msg.sender, ERR_INVALID_USER_STAKE_OWNER);
         require(userStake.interestWithdrew < userStake.interestAmount, ERR_INTEREST_TO_WITHDRAW_COMPLETED);
 
-        // day elapsed from nearest withdrawTime
-        uint256 daysElapsed = (block.timestamp - userStake.startDate) / SECONDS_IN_ONE_DAY - userStake.withdrawTime;
-        require(daysElapsed > 0, ERR_NO_INTEREST_TO_WITHDRAW);
+        uint256 interestToWithdraw = getEarnedRewardTokens(_pid, msg.sender);
+        require(interestToWithdraw > 0, "no tokens to claim");
+        userStake.interestAmount = 0;
 
-        uint256 dailyInterest = userStake.interestRate * userStake.receiveAmount / (365 * BASE_CONVERT);
-        uint256 interestToWithdraw = dailyInterest * daysElapsed;
-        uint256 remainingInterest = userStake.interestAmount - userStake.interestWithdrew;
+        uint256 interestWithdrew = userStake.interestAmount - userStake.interestWithdrew;
 
-        // Ensure not to exceed total interest
-        if (interestToWithdraw > remainingInterest) {
-            interestToWithdraw = remainingInterest;
-        }
         // Transfer
         IERC20Upgradeable oahToken = IERC20Upgradeable(OahToken);
         oahToken.transfer(msg.sender, interestToWithdraw);
 
-        userStake.withdrawTime += daysElapsed;
         userStake.interestWithdrew += interestToWithdraw;
 
-        emit UserClaimed(id, interestToWithdraw);
-    }
-
-    // TODO: remove - testing only
-    function claimMinute(uint256 id) public payable {
-        UserStake storage userStake = userStakes[id];
-        require(!userStake.completed, ERR_USER_STAKE_COMPLETED);
-        require(userStake.user == msg.sender, ERR_INVALID_USER_STAKE_OWNER);
-        require(userStake.interestWithdrew < userStake.interestAmount, ERR_INTEREST_TO_WITHDRAW_COMPLETED);
-
-        // day elapsed from nearest withdrawTime
-        uint256 daysElapsed = (block.timestamp - userStake.startDate) / 60 - userStake.withdrawTime;
-        require(daysElapsed > 0, ERR_NO_INTEREST_TO_WITHDRAW);
-
-        uint256 dailyInterest = userStake.interestRate * userStake.receiveAmount / (365 * 24 * 60 * BASE_CONVERT);
-        uint256 interestToWithdraw = dailyInterest * daysElapsed;
-        uint256 remainingInterest = userStake.interestAmount - userStake.interestWithdrew;
-
-        // Ensure not to exceed total interest
-        if (interestToWithdraw > remainingInterest) {
-            interestToWithdraw = remainingInterest;
-        }
-        // Transfer
-        IERC20Upgradeable oahToken = IERC20Upgradeable(OahToken);
-        oahToken.transfer(msg.sender, interestToWithdraw);
-
-        userStake.withdrawTime += daysElapsed;
-        userStake.interestWithdrew += interestToWithdraw;
-
-        emit UserClaimed(id, interestToWithdraw);
+        emit UserClaimed(_pid, msg.sender, OahToken, interestToWithdraw);
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
