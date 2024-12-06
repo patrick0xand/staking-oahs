@@ -9,25 +9,6 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract ETH is ERC20, Ownable {
-    constructor() ERC20("ETH", "ETH") {
-        // Mint initial supply to the contract deployer
-    }
-
-    // Optional: Function for the owner to mint additional tokens
-    function mint(address to, uint256 amount) external {
-        _mint(to, amount * 10 ** decimals());
-    }
-
-    // Optional: Function for the owner to burn tokens
-    function burn(uint256 amount) external {
-        _burn(msg.sender, amount);
-    }
-}
-
 contract Storage {
     // Errors
     string internal ERR_INVALID_LENGTH;
@@ -46,8 +27,7 @@ contract Storage {
     Stake[] public poolInfo;
     mapping(uint256 => mapping(address => UserStake)) public userStakes; // id => user => UserStake
     uint256 internal userStakeId;
-    address public OahToken;
-    // Structs
+    address public rewardToken;
 
     struct Stake {
         address stakeToken;
@@ -74,8 +54,8 @@ contract Storage {
     // Enums
     enum Period {
         Days_7,
-        Days_30,
-        Days_60
+        Days_60,
+        Days_120
     }
 
     // Events
@@ -93,10 +73,10 @@ contract Storage {
     returns (uint256)
     {
         uint256 timeElapsed = 7; // days
-        if (period == Period.Days_30) {
-            timeElapsed = 30;
-        } else if (period == Period.Days_60) {
+        if (period == Period.Days_60) {
             timeElapsed = 60;
+        } else if (period == Period.Days_120) {
+            timeElapsed = 120;
         }
         // dailyInterestRate = interestRate / (365 * BASE_CONVERT);
         uint256 interestEarned = amount * timeElapsed * interestRate / (365 * 100 * BASE_CONVERT);
@@ -116,7 +96,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         __Pausable_init();
         __ReentrancyGuard_init();
         userStakeId = 0;
-        OahToken = _oahToken;
+        rewardToken = _oahToken;
         transferOwnership(_owner);
 
         // Errors
@@ -133,6 +113,10 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         SECONDS_IN_ONE_DAY = 24 * 60 * 60;
     }
 
+    function poolLength() external view returns (uint256) {
+        return poolInfo.length;
+    }
+
     function toUint48(uint256 value) internal pure returns (uint48) {
         require(value <= type(uint48).max, "value doesn't fit in 48 bits");
         return uint48(value);
@@ -147,15 +131,31 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         return userStakes[_pid][_staker].stakeAmount > 0 ? toUint48(userStakes[_pid][_staker].withdrawTime) : MAX_TIME;
     }
 
-    // Config functions
-    function setStakes(Stake[] calldata _stake) external onlyOwner {
-        for (uint256 i = 0; i < _stake.length; i++) {
-            Stake memory stake = _stake[i];
-            stakes[stake.stakeToken] = stake;
-            poolInfo.push(stake);
+    // Config functions. Can only be called by the owner.
+    function setStakes(Period _period, IERC20Upgradeable _token) external onlyOwner {
+        uint256 interestRate;
+        if (_period == Period.Days_7) {
+            interestRate = 1000;
+        } else if (_period == Period.Days_60) {
+            interestRate = 1500;
+        }else if (_period == Period.Days_120) {
+            interestRate = 2000;
+        }else {
+            revert("Owner: Cannot set to this period");
         }
+            Stake memory stake = Stake({
+    stakeToken: _token,
+    period: _period,
+            interestRate: interestRate,
+    isActive: true
+        });
+            poolInfo.push(stake);
 
         emit StakesChanged(_stake);
+    }
+
+    function set(uint256 _pid, uint256 _interestRate) public onlyOwner {
+        poolInfo[_pid].interestRate = _interestRate;
     }
 
     function pause() public onlyOwner {
@@ -171,10 +171,10 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         UserStake storage user = userStakes[_pid][_staker];
         if (block.timestamp <= user.startDate) return 0;
         uint256 timeElapsed = 7 days; // days
-        if (stake.period == Period.Days_30) {
-            timeElapsed = 30 days;
-        } else if (stake.period == Period.Days_60) {
+        if (stake.period == Period.Days_60) {
             timeElapsed = 60 days;
+        } else if (stake.period == Period.Days_120) {
+            timeElapsed = 120 days;
         }
         uint48 stakeRewardEndTime = toUint48(user.startDate + timeElapsed);
 
@@ -183,19 +183,6 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         } else {
             return calculateTotalInterest(stake.period, stake.interestRate, user.stakeAmount);
         }
-    }
-
-    function getEarnedRewardTokens(uint256 _pid, address _staker) public view returns (uint256 claimableRewardTokens) {
-//        if (address(OahToken) == address(0) || stakeRewardFactor == 0) {
-//            return 0;
-//        } else {        // day elapsed from nearest withdrawTime
-        UserStake storage userStake = userStakes[_pid][_staker];
-        uint256 daysElapsed = (block.timestamp - userStake.startDate) / SECONDS_IN_ONE_DAY - userStake.withdrawTime;
-        require(daysElapsed > 0, ERR_NO_INTEREST_TO_WITHDRAW);
-
-        uint256 dailyInterest = userStake.interestRate * userStake.receiveAmount / (365 * BASE_CONVERT);
-        return dailyInterest * daysElapsed;
-//        }
     }
 
     // User functions
@@ -232,10 +219,10 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         userStake.stakeAmount = toUint160(userStake.stakeAmount + _amount);
 
         uint256 timeElapsed = 7 days; // days
-        if (stake.period == Period.Days_30) {
-            timeElapsed = 30 days;
-        } else if (stake.period == Period.Days_60) {
+        if (stake.period == Period.Days_60) {
             timeElapsed = 60 days;
+        } else if (stake.period == Period.Days_120) {
+            timeElapsed = 120 days;
         }
         userStake.withdrawTime = toUint48(block.timestamp + timeElapsed);
 
@@ -264,7 +251,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     }
 
     function claim(uint256 _pid) external nonReentrant {
-        require(OahToken != address(0), "no reward token contract");
+        require(rewardToken != address(0), "no reward token contract");
         UserStake storage userStake = userStakes[_pid][msg.sender];
         require(!userStake.completed, ERR_USER_STAKE_COMPLETED);
         require(userStake.user == msg.sender, ERR_INVALID_USER_STAKE_OWNER);
@@ -277,12 +264,12 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         uint256 interestWithdrew = userStake.interestAmount - userStake.interestWithdrew;
 
         // Transfer
-        IERC20Upgradeable oahToken = IERC20Upgradeable(OahToken);
+        IERC20Upgradeable oahToken = IERC20Upgradeable(rewardToken);
         oahToken.transfer(msg.sender, interestToWithdraw);
 
         userStake.interestWithdrew += interestToWithdraw;
 
-        emit UserClaimed(_pid, msg.sender, OahToken, interestToWithdraw);
+        emit UserClaimed(_pid, msg.sender, rewardToken, interestToWithdraw);
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
