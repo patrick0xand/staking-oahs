@@ -11,10 +11,10 @@ describe("Staking", function () {
     const [owner, otherAccount] = await ethers.getSigners();
 
     const USDT = await ethers.getContractFactory("MockERC20");
-    const usdt = await USDT.deploy();
+    const usdt = await USDT.deploy("USDTToken", "USDT");
 
     const OAH = await ethers.getContractFactory("MockERC20");
-    const oah = await OAH.deploy();
+    const oah = await OAH.deploy("OAH Reward Token", "OAH");
     const oahAddr = await oah.getAddress();
     const ImplStaking = await ethers.getContractFactory("Staking");
     const contract = await upgrades.deployProxy(
@@ -76,4 +76,7 @@ describe("Staking", function () {
   //       .withArgs(owner, usdc, amountIn);
   //   });
   // });
+  describe("test stake & withdraw, time lock and rewards", function () {
+
+  });
 });

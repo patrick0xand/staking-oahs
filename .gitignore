@@ -1,13 +1,21 @@
+dist/
+lib/
 node_modules
 .env
+*.log
+*.tsbuildinfo
+npm-debug.log*
 
 # Hardhat files
 /cache
 /artifacts
+build/
 
 # TypeChain files
 /typechain
 /typechain-types
+
+.vscode/
 
 # solidity-coverage files
 /coverage

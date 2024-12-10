@@ -19,45 +19,22 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
-        components: [
-          {
-            internalType: "address",
-            name: "stakeToken",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "convertRate",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "interestRate",
-            type: "uint256",
-          },
-          {
-            internalType: "bool",
-            name: "isActive",
-            type: "bool",
-          },
-        ],
-        indexed: false,
-        internalType: "struct Storage.Stake[]",
-        name: "_stakes",
-        type: "tuple[]",
-      },
-    ],
-    name: "StakesChanged",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
         indexed: false,
         internalType: "uint256",
         name: "id",
         type: "uint256",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "wallet",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "rewardToken",
+        type: "address",
       },
       {
         indexed: false,
@@ -73,73 +50,22 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        indexed: true,
         internalType: "uint256",
-        name: "id",
+        name: "pid",
         type: "uint256",
       },
       {
-        components: [
-          {
-            internalType: "address",
-            name: "user",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "stakeToken",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "stakeAmount",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "interestRate",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "receiveAmount",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "interestAmount",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "startDate",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "interestWithdrew",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "withdrawTime",
-            type: "uint256",
-          },
-          {
-            internalType: "enum Storage.Period",
-            name: "period",
-            type: "uint8",
-          },
-          {
-            internalType: "bool",
-            name: "completed",
-            type: "bool",
-          },
-        ],
         indexed: false,
-        internalType: "struct Storage.UserStake",
-        name: "_userStake",
-        type: "tuple",
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
       },
     ],
     name: "UserStaked",
@@ -149,73 +75,22 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
+        indexed: true,
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        indexed: true,
         internalType: "uint256",
-        name: "id",
+        name: "pid",
         type: "uint256",
       },
       {
-        components: [
-          {
-            internalType: "address",
-            name: "user",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "stakeToken",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "stakeAmount",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "interestRate",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "receiveAmount",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "interestAmount",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "startDate",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "interestWithdrew",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "withdrawTime",
-            type: "uint256",
-          },
-          {
-            internalType: "enum Storage.Period",
-            name: "period",
-            type: "uint8",
-          },
-          {
-            internalType: "bool",
-            name: "completed",
-            type: "bool",
-          },
-        ],
         indexed: false,
-        internalType: "struct Storage.UserStake",
-        name: "_userStake",
-        type: "tuple",
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
       },
     ],
     name: "UserWithdrew",
@@ -223,12 +98,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "OahToken",
+    name: "MAX_TIME",
     outputs: [
       {
-        internalType: "address",
+        internalType: "uint48",
         name: "",
-        type: "address",
+        type: "uint48",
       },
     ],
     stateMutability: "view",
@@ -237,27 +112,45 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "enum Storage.Period",
-        name: "period",
-        type: "uint8",
-      },
-      {
-        internalType: "uint256",
-        name: "interestRate",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "calculateTotalInterest",
-    outputs: [
-      {
         internalType: "uint256",
         name: "",
         type: "uint256",
+      },
+    ],
+    name: "poolInfo",
+    outputs: [
+      {
+        internalType: "address",
+        name: "stakeToken",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "convertRate",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "lockTimePeriod",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "isActive",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "rewardToken",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -285,7 +178,7 @@ const _abi = [
       },
       {
         internalType: "uint256",
-        name: "interestRate",
+        name: "lockTimePeriod",
         type: "uint256",
       },
       {
@@ -303,6 +196,11 @@ const _abi = [
         internalType: "uint256",
         name: "",
         type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     name: "userStakes",
@@ -369,7 +267,7 @@ const _abi = [
 ] as const;
 
 const _bytecode =
-  "0x6080604052348015600f57600080fd5b506103c68061001f6000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c806316934fc414610051578063642cdfe3146100c45780638375a40b146100ef5780639239a75014610110575b600080fd5b61009361005f36600461021c565b60096020526000908152604090208054600182015460028301546003909301546001600160a01b0390921692909160ff1684565b604080516001600160a01b039095168552602085019390935291830152151560608201526080015b60405180910390f35b600c546100d7906001600160a01b031681565b6040516001600160a01b0390911681526020016100bb565b6101026100fd36600461024c565b61019f565b6040519081526020016100bb565b61018861011e366004610285565b600a6020526000908152604090208054600182015460028301546003840154600485015460058601546006870154600788015460088901546009909901546001600160a01b0398891699979098169795969495939492939192909160ff808216916101009004168b565b6040516100bb9b9a999897969594939291906102b4565b6000600760018560028111156101b7576101b761029e565b036101c45750601e6101e1565b60028560028111156101d8576101d861029e565b036101e15750603c5b6000600754618e946101f39190610343565b856101fe8487610343565b6102089190610343565b610212919061036e565b9695505050505050565b60006020828403121561022e57600080fd5b81356001600160a01b038116811461024557600080fd5b9392505050565b60008060006060848603121561026157600080fd5b83356003811061027057600080fd5b95602085013595506040909401359392505050565b60006020828403121561029757600080fd5b5035919050565b634e487b7160e01b600052602160045260246000fd5b6001600160a01b038c811682528b166020820152604081018a9052606081018990526080810188905260a0810187905260c0810186905260e08101859052610100810184905261016081016003841061031d57634e487b7160e01b600052602160045260246000fd5b8361012083015261033361014083018415159052565b9c9b505050505050505050505050565b808202811582820484141761036857634e487b7160e01b600052601160045260246000fd5b92915050565b60008261038b57634e487b7160e01b600052601260045260246000fd5b50049056fea26469706673582212205025a78ad39b7dc6b5920fd62a59ea199d1236b4457aaa6cd7efaae2a54905b064736f6c63430008190033";
+  "0x6080604052348015600f57600080fd5b5061035a8061001f6000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c80631526fe271461005c57806316934fc4146100a057806326949984146100e2578063e899052414610106578063f7c618c1146101a0575b600080fd5b61006f61006a366004610212565b6101cb565b604080516001600160a01b039095168552602085019390935291830152151560608201526080015b60405180910390f35b61006f6100ae366004610247565b60096020526000908152604090208054600182015460028301546003909301546001600160a01b0390921692909160ff1684565b6100ef65ffffffffffff81565b60405165ffffffffffff9091168152602001610097565b610189610114366004610269565b600b60209081526000928352604080842090915290825290208054600182015460028301546003840154600485015460058601546006870154600788015460088901546009909901546001600160a01b0398891699979098169795969495939492939192909160ff808216916101009004168b565b6040516100979b9a99989796959493929190610295565b600d546101b3906001600160a01b031681565b6040516001600160a01b039091168152602001610097565b600a81815481106101db57600080fd5b600091825260209091206004909102018054600182015460028301546003909301546001600160a01b039092169350919060ff1684565b60006020828403121561022457600080fd5b5035919050565b80356001600160a01b038116811461024257600080fd5b919050565b60006020828403121561025957600080fd5b6102628261022b565b9392505050565b6000806040838503121561027c57600080fd5b8235915061028c6020840161022b565b90509250929050565b6001600160a01b038c811682528b166020820152604081018a9052606081018990526080810188905260a0810187905260c0810186905260e0810185905261010081018490526101608101600384106102fe57634e487b7160e01b600052602160045260246000fd5b8361012083015261031461014083018415159052565b9c9b50505050505050505050505056fea264697066735822122039c69b53aa4b6288af8401d986c7ecc50ba20782be64d422a9b110de32f1afa264736f6c63430008190033";
 
 type StorageConstructorParams =
   | [signer?: Signer]

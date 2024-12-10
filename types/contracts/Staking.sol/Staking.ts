@@ -23,87 +23,30 @@ import type {
   TypedContractMethod,
 } from "../../common";
 
-export declare namespace Storage {
-  export type StakeStruct = {
-    stakeToken: AddressLike;
-    convertRate: BigNumberish;
-    interestRate: BigNumberish;
-    isActive: boolean;
-  };
-
-  export type StakeStructOutput = [
-    stakeToken: string,
-    convertRate: bigint,
-    interestRate: bigint,
-    isActive: boolean
-  ] & {
-    stakeToken: string;
-    convertRate: bigint;
-    interestRate: bigint;
-    isActive: boolean;
-  };
-
-  export type UserStakeStruct = {
-    user: AddressLike;
-    stakeToken: AddressLike;
-    stakeAmount: BigNumberish;
-    interestRate: BigNumberish;
-    receiveAmount: BigNumberish;
-    interestAmount: BigNumberish;
-    startDate: BigNumberish;
-    interestWithdrew: BigNumberish;
-    withdrawTime: BigNumberish;
-    period: BigNumberish;
-    completed: boolean;
-  };
-
-  export type UserStakeStructOutput = [
-    user: string,
-    stakeToken: string,
-    stakeAmount: bigint,
-    interestRate: bigint,
-    receiveAmount: bigint,
-    interestAmount: bigint,
-    startDate: bigint,
-    interestWithdrew: bigint,
-    withdrawTime: bigint,
-    period: bigint,
-    completed: boolean
-  ] & {
-    user: string;
-    stakeToken: string;
-    stakeAmount: bigint;
-    interestRate: bigint;
-    receiveAmount: bigint;
-    interestAmount: bigint;
-    startDate: bigint;
-    interestWithdrew: bigint;
-    withdrawTime: bigint;
-    period: bigint;
-    completed: boolean;
-  };
-}
-
 export interface StakingInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "OahToken"
-      | "calculateTotalInterest"
+      | "MAX_TIME"
       | "claim"
-      | "claimMinute"
+      | "getUnlockTime"
       | "initialize"
       | "newStake"
       | "owner"
       | "pause"
       | "paused"
+      | "poolInfo"
+      | "poolLength"
       | "proxiableUUID"
       | "renounceOwnership"
+      | "rewardToken"
+      | "set"
       | "setStakes"
       | "stakes"
       | "transferOwnership"
       | "unpause"
       | "upgradeTo"
       | "upgradeToAndCall"
+      | "userClaimableRewards"
       | "userStakes"
       | "withdraw"
   ): FunctionFragment;
@@ -115,7 +58,6 @@ export interface StakingInterface extends Interface {
       | "Initialized"
       | "OwnershipTransferred"
       | "Paused"
-      | "StakesChanged"
       | "Unpaused"
       | "Upgraded"
       | "UserClaimed"
@@ -123,15 +65,11 @@ export interface StakingInterface extends Interface {
       | "UserWithdrew"
   ): EventFragment;
 
-  encodeFunctionData(functionFragment: "OahToken", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "calculateTotalInterest",
-    values: [BigNumberish, BigNumberish, BigNumberish]
-  ): string;
+  encodeFunctionData(functionFragment: "MAX_TIME", values?: undefined): string;
   encodeFunctionData(functionFragment: "claim", values: [BigNumberish]): string;
   encodeFunctionData(
-    functionFragment: "claimMinute",
-    values: [BigNumberish]
+    functionFragment: "getUnlockTime",
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "initialize",
@@ -139,11 +77,19 @@ export interface StakingInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "newStake",
-    values: [AddressLike, BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "poolInfo",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "poolLength",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "proxiableUUID",
     values?: undefined
@@ -153,8 +99,16 @@ export interface StakingInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "rewardToken",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "set",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setStakes",
-    values: [Storage.StakeStruct[]]
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(functionFragment: "stakes", values: [AddressLike]): string;
   encodeFunctionData(
@@ -171,22 +125,22 @@ export interface StakingInterface extends Interface {
     values: [AddressLike, BytesLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "userClaimableRewards",
+    values: [BigNumberish, AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "userStakes",
-    values: [BigNumberish]
+    values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [BigNumberish]
+    values: [BigNumberish, BigNumberish]
   ): string;
 
-  decodeFunctionResult(functionFragment: "OahToken", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "calculateTotalInterest",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "MAX_TIME", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "claim", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "claimMinute",
+    functionFragment: "getUnlockTime",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
@@ -194,6 +148,8 @@ export interface StakingInterface extends Interface {
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "poolInfo", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "poolLength", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "proxiableUUID",
     data: BytesLike
@@ -202,6 +158,11 @@ export interface StakingInterface extends Interface {
     functionFragment: "renounceOwnership",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "rewardToken",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "set", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "setStakes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(
@@ -212,6 +173,10 @@ export interface StakingInterface extends Interface {
   decodeFunctionResult(functionFragment: "upgradeTo", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "upgradeToAndCall",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "userClaimableRewards",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "userStakes", data: BytesLike): Result;
@@ -280,18 +245,6 @@ export namespace PausedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace StakesChangedEvent {
-  export type InputTuple = [_stakes: Storage.StakeStruct[]];
-  export type OutputTuple = [_stakes: Storage.StakeStructOutput[]];
-  export interface OutputObject {
-    _stakes: Storage.StakeStructOutput[];
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
 export namespace UnpausedEvent {
   export type InputTuple = [account: AddressLike];
   export type OutputTuple = [account: string];
@@ -317,10 +270,22 @@ export namespace UpgradedEvent {
 }
 
 export namespace UserClaimedEvent {
-  export type InputTuple = [id: BigNumberish, claimedAmount: BigNumberish];
-  export type OutputTuple = [id: bigint, claimedAmount: bigint];
+  export type InputTuple = [
+    id: BigNumberish,
+    wallet: AddressLike,
+    rewardToken: AddressLike,
+    claimedAmount: BigNumberish
+  ];
+  export type OutputTuple = [
+    id: bigint,
+    wallet: string,
+    rewardToken: string,
+    claimedAmount: bigint
+  ];
   export interface OutputObject {
     id: bigint;
+    wallet: string;
+    rewardToken: string;
     claimedAmount: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -331,16 +296,15 @@ export namespace UserClaimedEvent {
 
 export namespace UserStakedEvent {
   export type InputTuple = [
-    id: BigNumberish,
-    _userStake: Storage.UserStakeStruct
+    user: AddressLike,
+    pid: BigNumberish,
+    amount: BigNumberish
   ];
-  export type OutputTuple = [
-    id: bigint,
-    _userStake: Storage.UserStakeStructOutput
-  ];
+  export type OutputTuple = [user: string, pid: bigint, amount: bigint];
   export interface OutputObject {
-    id: bigint;
-    _userStake: Storage.UserStakeStructOutput;
+    user: string;
+    pid: bigint;
+    amount: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -350,16 +314,15 @@ export namespace UserStakedEvent {
 
 export namespace UserWithdrewEvent {
   export type InputTuple = [
-    id: BigNumberish,
-    _userStake: Storage.UserStakeStruct
+    user: AddressLike,
+    pid: BigNumberish,
+    amount: BigNumberish
   ];
-  export type OutputTuple = [
-    id: bigint,
-    _userStake: Storage.UserStakeStructOutput
-  ];
+  export type OutputTuple = [user: string, pid: bigint, amount: bigint];
   export interface OutputObject {
-    id: bigint;
-    _userStake: Storage.UserStakeStructOutput;
+    user: string;
+    pid: bigint;
+    amount: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -410,17 +373,15 @@ export interface Staking extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  OahToken: TypedContractMethod<[], [string], "view">;
+  MAX_TIME: TypedContractMethod<[], [bigint], "view">;
 
-  calculateTotalInterest: TypedContractMethod<
-    [period: BigNumberish, interestRate: BigNumberish, amount: BigNumberish],
+  claim: TypedContractMethod<[_pid: BigNumberish], [void], "nonpayable">;
+
+  getUnlockTime: TypedContractMethod<
+    [_pid: BigNumberish, _staker: AddressLike],
     [bigint],
     "view"
   >;
-
-  claim: TypedContractMethod<[id: BigNumberish], [void], "payable">;
-
-  claimMinute: TypedContractMethod<[id: BigNumberish], [void], "payable">;
 
   initialize: TypedContractMethod<
     [_owner: AddressLike, _oahToken: AddressLike],
@@ -429,7 +390,7 @@ export interface Staking extends BaseContract {
   >;
 
   newStake: TypedContractMethod<
-    [_stakeToken: AddressLike, _amount: BigNumberish, _period: BigNumberish],
+    [_pid: BigNumberish, _amount: BigNumberish],
     [void],
     "payable"
   >;
@@ -440,12 +401,35 @@ export interface Staking extends BaseContract {
 
   paused: TypedContractMethod<[], [boolean], "view">;
 
+  poolInfo: TypedContractMethod<
+    [arg0: BigNumberish],
+    [
+      [string, bigint, bigint, boolean] & {
+        stakeToken: string;
+        convertRate: bigint;
+        lockTimePeriod: bigint;
+        isActive: boolean;
+      }
+    ],
+    "view"
+  >;
+
+  poolLength: TypedContractMethod<[], [bigint], "view">;
+
   proxiableUUID: TypedContractMethod<[], [string], "view">;
 
   renounceOwnership: TypedContractMethod<[], [void], "nonpayable">;
 
+  rewardToken: TypedContractMethod<[], [string], "view">;
+
+  set: TypedContractMethod<
+    [_pid: BigNumberish, _interestRate: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   setStakes: TypedContractMethod<
-    [_stake: Storage.StakeStruct[]],
+    [_period: BigNumberish, _token: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -456,7 +440,7 @@ export interface Staking extends BaseContract {
       [string, bigint, bigint, boolean] & {
         stakeToken: string;
         convertRate: bigint;
-        interestRate: bigint;
+        lockTimePeriod: bigint;
         isActive: boolean;
       }
     ],
@@ -483,8 +467,14 @@ export interface Staking extends BaseContract {
     "payable"
   >;
 
+  userClaimableRewards: TypedContractMethod<
+    [_pid: BigNumberish, _staker: AddressLike],
+    [bigint],
+    "view"
+  >;
+
   userStakes: TypedContractMethod<
-    [arg0: BigNumberish],
+    [arg0: BigNumberish, arg1: AddressLike],
     [
       [
         string,
@@ -515,28 +505,29 @@ export interface Staking extends BaseContract {
     "view"
   >;
 
-  withdraw: TypedContractMethod<[id: BigNumberish], [void], "payable">;
+  withdraw: TypedContractMethod<
+    [_pid: BigNumberish, _amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
   getFunction(
-    nameOrSignature: "OahToken"
-  ): TypedContractMethod<[], [string], "view">;
+    nameOrSignature: "MAX_TIME"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "calculateTotalInterest"
+    nameOrSignature: "claim"
+  ): TypedContractMethod<[_pid: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "getUnlockTime"
   ): TypedContractMethod<
-    [period: BigNumberish, interestRate: BigNumberish, amount: BigNumberish],
+    [_pid: BigNumberish, _staker: AddressLike],
     [bigint],
     "view"
   >;
-  getFunction(
-    nameOrSignature: "claim"
-  ): TypedContractMethod<[id: BigNumberish], [void], "payable">;
-  getFunction(
-    nameOrSignature: "claimMinute"
-  ): TypedContractMethod<[id: BigNumberish], [void], "payable">;
   getFunction(
     nameOrSignature: "initialize"
   ): TypedContractMethod<
@@ -547,7 +538,7 @@ export interface Staking extends BaseContract {
   getFunction(
     nameOrSignature: "newStake"
   ): TypedContractMethod<
-    [_stakeToken: AddressLike, _amount: BigNumberish, _period: BigNumberish],
+    [_pid: BigNumberish, _amount: BigNumberish],
     [void],
     "payable"
   >;
@@ -561,14 +552,45 @@ export interface Staking extends BaseContract {
     nameOrSignature: "paused"
   ): TypedContractMethod<[], [boolean], "view">;
   getFunction(
+    nameOrSignature: "poolInfo"
+  ): TypedContractMethod<
+    [arg0: BigNumberish],
+    [
+      [string, bigint, bigint, boolean] & {
+        stakeToken: string;
+        convertRate: bigint;
+        lockTimePeriod: bigint;
+        isActive: boolean;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "poolLength"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "proxiableUUID"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "renounceOwnership"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "rewardToken"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "set"
+  ): TypedContractMethod<
+    [_pid: BigNumberish, _interestRate: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "setStakes"
-  ): TypedContractMethod<[_stake: Storage.StakeStruct[]], [void], "nonpayable">;
+  ): TypedContractMethod<
+    [_period: BigNumberish, _token: AddressLike],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "stakes"
   ): TypedContractMethod<
@@ -577,7 +599,7 @@ export interface Staking extends BaseContract {
       [string, bigint, bigint, boolean] & {
         stakeToken: string;
         convertRate: bigint;
-        interestRate: bigint;
+        lockTimePeriod: bigint;
         isActive: boolean;
       }
     ],
@@ -604,9 +626,16 @@ export interface Staking extends BaseContract {
     "payable"
   >;
   getFunction(
+    nameOrSignature: "userClaimableRewards"
+  ): TypedContractMethod<
+    [_pid: BigNumberish, _staker: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "userStakes"
   ): TypedContractMethod<
-    [arg0: BigNumberish],
+    [arg0: BigNumberish, arg1: AddressLike],
     [
       [
         string,
@@ -638,7 +667,11 @@ export interface Staking extends BaseContract {
   >;
   getFunction(
     nameOrSignature: "withdraw"
-  ): TypedContractMethod<[id: BigNumberish], [void], "payable">;
+  ): TypedContractMethod<
+    [_pid: BigNumberish, _amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
   getEvent(
     key: "AdminChanged"
@@ -674,13 +707,6 @@ export interface Staking extends BaseContract {
     PausedEvent.InputTuple,
     PausedEvent.OutputTuple,
     PausedEvent.OutputObject
-  >;
-  getEvent(
-    key: "StakesChanged"
-  ): TypedContractEvent<
-    StakesChangedEvent.InputTuple,
-    StakesChangedEvent.OutputTuple,
-    StakesChangedEvent.OutputObject
   >;
   getEvent(
     key: "Unpaused"
@@ -774,17 +800,6 @@ export interface Staking extends BaseContract {
       PausedEvent.OutputObject
     >;
 
-    "StakesChanged(tuple[])": TypedContractEvent<
-      StakesChangedEvent.InputTuple,
-      StakesChangedEvent.OutputTuple,
-      StakesChangedEvent.OutputObject
-    >;
-    StakesChanged: TypedContractEvent<
-      StakesChangedEvent.InputTuple,
-      StakesChangedEvent.OutputTuple,
-      StakesChangedEvent.OutputObject
-    >;
-
     "Unpaused(address)": TypedContractEvent<
       UnpausedEvent.InputTuple,
       UnpausedEvent.OutputTuple,
@@ -807,7 +822,7 @@ export interface Staking extends BaseContract {
       UpgradedEvent.OutputObject
     >;
 
-    "UserClaimed(uint256,uint256)": TypedContractEvent<
+    "UserClaimed(uint256,address,address,uint256)": TypedContractEvent<
       UserClaimedEvent.InputTuple,
       UserClaimedEvent.OutputTuple,
       UserClaimedEvent.OutputObject
@@ -818,7 +833,7 @@ export interface Staking extends BaseContract {
       UserClaimedEvent.OutputObject
     >;
 
-    "UserStaked(uint256,tuple)": TypedContractEvent<
+    "UserStaked(address,uint256,uint256)": TypedContractEvent<
       UserStakedEvent.InputTuple,
       UserStakedEvent.OutputTuple,
       UserStakedEvent.OutputObject
@@ -829,7 +844,7 @@ export interface Staking extends BaseContract {
       UserStakedEvent.OutputObject
     >;
 
-    "UserWithdrew(uint256,tuple)": TypedContractEvent<
+    "UserWithdrew(address,uint256,uint256)": TypedContractEvent<
       UserWithdrewEvent.InputTuple,
       UserWithdrewEvent.OutputTuple,
       UserWithdrewEvent.OutputObject
