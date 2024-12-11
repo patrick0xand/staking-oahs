@@ -21,7 +21,6 @@ contract Storage {
     string internal ERR_INTEREST_TO_WITHDRAW_COMPLETED;
 
     uint256 internal BASE_CONVERT;
-    uint256 internal SECONDS_IN_ONE_DAY;
 
     // Values
     Stake[] public poolInfo;
@@ -37,7 +36,6 @@ contract Storage {
     }
 
     struct UserStake {
-        address user;
         address stakeToken;
         uint256 stakeAmount;
         uint256 interestRate;
@@ -91,8 +89,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         ERR_INTEREST_TO_WITHDRAW_COMPLETED = "ERR_INTEREST_TO_WITHDRAW_COMPLETED";
 
         // init value
-        BASE_CONVERT = 100;
-        SECONDS_IN_ONE_DAY = 24 * 60 * 60;
+        BASE_CONVERT = 1000;
     }
 
     function poolLength() external view returns (uint256) {
@@ -165,12 +162,12 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         uint48 stakeRewardEndTime = toUint48(user.startDate + stake.lockTimePeriod);
 
         if (block.timestamp <= stakeRewardEndTime) {
-            return 0;
+            timePeriod = block.timestamp - user.startDate;
         } else {
-            uint256 interestEarned = user.stakeAmount * BASE_CONVERT / stake.convertRate;
-
-            return interestEarned;
+            timePeriod = stakeRewardEndTime - user.startDate;
         }
+
+        return timePeriod * user.stakeAmount;
     }
 
     function userTotalRewards(uint256 _pid, address _staker) public view returns (uint256) {
@@ -183,7 +180,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         if (address(rewardToken) == address(0) || stake.convertRate == 0) {
             return 0;
         } else {
-            return userTotalRewards(_pid, _staker) / stake.convertRate; // safe
+            return userTotalRewards(_pid, _staker) * BASE_CONVERT / stake.convertRate; // safe
         }
     }
 
@@ -230,7 +227,6 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
 
         require(_amount <= userStake.stakeAmount, "withdraw amount > staked amount");
         require(!userStake.completed, ERR_USER_STAKE_COMPLETED);
-        require(userStake.user == msg.sender, ERR_INVALID_USER_STAKE_OWNER);
         userStake.stakeAmount -= toUint160(_amount);
 
         if (userStake.stakeToken == address(0)) {
@@ -247,11 +243,11 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         require(rewardToken != address(0), "no reward token contract");
         UserStake storage userStake = userStakes[_pid][msg.sender];
         require(!userStake.completed, ERR_USER_STAKE_COMPLETED);
-        require(userStake.user == msg.sender, ERR_INVALID_USER_STAKE_OWNER);
 
-        uint256 interestToWithdraw = userClaimableRewards(_pid, msg.sender);
+        uint256 interestToWithdraw = getEarnedRewardTokens(_pid, msg.sender);
         require(interestToWithdraw > 0, "no tokens to claim");
         userStake.accumulatedRewards = 0;
+        userStake.startDate = toUint48(block.timestamp); // will reset userClaimableRewards to 0
 
         // Transfer
         IERC20Upgradeable oahToken = IERC20Upgradeable(rewardToken);
