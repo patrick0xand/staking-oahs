@@ -23,7 +23,7 @@ contract Storage {
     uint256 internal BASE_CONVERT;
 
     // Values
-    Stake[] public poolInfo;
+    Stake[] public stakes;
     mapping(uint256 => mapping(address => UserStake)) public userStakes; // id => user => UserStake
     uint256 internal userStakeId;
     address public rewardToken;
@@ -93,7 +93,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     }
 
     function poolLength() external view returns (uint256) {
-        return poolInfo.length;
+        return stakes.length;
     }
 
     function toUint48(uint256 value) internal pure returns (uint48) {
@@ -136,11 +136,11 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
             lockTimePeriod: _lockTimePeriod,
             isActive: true
         });
-        poolInfo.push(stake);
+        stakes.push(stake);
     }
 
     function set(uint256 _pid, uint256 _interestRate) public onlyOwner {
-        poolInfo[_pid].convertRate = _interestRate;
+        stakes[_pid].convertRate = _interestRate;
     }
 
     function pause() public onlyOwner {
@@ -174,7 +174,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     }
 
     function getEarnedRewardTokens(uint256 _pid, address _staker) public view returns (uint256 claimableRewardTokens) {
-        Stake storage stake = poolInfo[_pid];
+        Stake storage stake = stakes[_pid];
 
         if (address(rewardToken) == address(0) || stake.convertRate == 0) {
             return 0;
@@ -199,7 +199,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     function newStake(uint256 _pid, uint256 _amount) external nonReentrant payable whenNotPaused {
         require(_amount > 0, "stake amount must be > 0");
 
-        Stake storage stake = poolInfo[_pid];
+        Stake storage stake = stakes[_pid];
         require(stake.isActive, ERR_STAKE_NOT_ACTIVE);
         IERC20Upgradeable stakeToken = IERC20Upgradeable(stake.stakeToken);
 
