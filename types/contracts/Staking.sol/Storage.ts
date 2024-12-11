@@ -25,12 +25,7 @@ import type {
 
 export interface StorageInterface extends Interface {
   getFunction(
-    nameOrSignature:
-      | "MAX_TIME"
-      | "poolInfo"
-      | "rewardToken"
-      | "stakes"
-      | "userStakes"
+    nameOrSignature: "MAX_TIME" | "poolInfo" | "rewardToken" | "userStakes"
   ): FunctionFragment;
 
   getEvent(
@@ -46,7 +41,6 @@ export interface StorageInterface extends Interface {
     functionFragment: "rewardToken",
     values?: undefined
   ): string;
-  encodeFunctionData(functionFragment: "stakes", values: [AddressLike]): string;
   encodeFunctionData(
     functionFragment: "userStakes",
     values: [BigNumberish, AddressLike]
@@ -58,7 +52,6 @@ export interface StorageInterface extends Interface {
     functionFragment: "rewardToken",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "userStakes", data: BytesLike): Result;
 }
 
@@ -183,24 +176,10 @@ export interface Storage extends BaseContract {
 
   rewardToken: TypedContractMethod<[], [string], "view">;
 
-  stakes: TypedContractMethod<
-    [arg0: AddressLike],
-    [
-      [string, bigint, bigint, boolean] & {
-        stakeToken: string;
-        convertRate: bigint;
-        lockTimePeriod: bigint;
-        isActive: boolean;
-      }
-    ],
-    "view"
-  >;
-
   userStakes: TypedContractMethod<
     [arg0: BigNumberish, arg1: AddressLike],
     [
       [
-        string,
         string,
         bigint,
         bigint,
@@ -212,7 +191,6 @@ export interface Storage extends BaseContract {
         bigint,
         boolean
       ] & {
-        user: string;
         stakeToken: string;
         stakeAmount: bigint;
         interestRate: bigint;
@@ -253,26 +231,11 @@ export interface Storage extends BaseContract {
     nameOrSignature: "rewardToken"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
-    nameOrSignature: "stakes"
-  ): TypedContractMethod<
-    [arg0: AddressLike],
-    [
-      [string, bigint, bigint, boolean] & {
-        stakeToken: string;
-        convertRate: bigint;
-        lockTimePeriod: bigint;
-        isActive: boolean;
-      }
-    ],
-    "view"
-  >;
-  getFunction(
     nameOrSignature: "userStakes"
   ): TypedContractMethod<
     [arg0: BigNumberish, arg1: AddressLike],
     [
       [
-        string,
         string,
         bigint,
         bigint,
@@ -284,7 +247,6 @@ export interface Storage extends BaseContract {
         bigint,
         boolean
       ] & {
-        user: string;
         stakeToken: string;
         stakeAmount: bigint;
         interestRate: bigint;

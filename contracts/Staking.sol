@@ -116,16 +116,12 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
 
     // Config functions. Can only be called by the owner.
     function setStakes(Period _period, IERC20Upgradeable _token) external onlyOwner {
-        uint256 interestRate;
         uint256 _lockTimePeriod;
         if (_period == Period.Days_7) {
-            interestRate = 1000;
             _lockTimePeriod = 7 days;
         } else if (_period == Period.Days_60) {
-            interestRate = 1500;
             _lockTimePeriod = 60 days;
         } else if (_period == Period.Days_120) {
-            interestRate = 2000;
             _lockTimePeriod = 120 days;
         } else {
             revert("Owner: Cannot set to this period");
@@ -197,7 +193,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         userStake.startDate = toUint48(block.timestamp);
     }
 
-    function newStake(uint256 _pid, uint256 _amount) external nonReentrant payable whenNotPaused {
+    function newStake(uint256 _pid, uint256 _amount) external payable nonReentrant whenNotPaused {
         require(_amount > 0, "stake amount must be > 0");
 
         Stake storage stake = poolInfo[_pid];
@@ -215,7 +211,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         userStake.stakeAmount = toUint160(userStake.stakeAmount + _amount);
 
         userStake.withdrawTime = toUint48(block.timestamp + stake.lockTimePeriod);
-
+        userStake.stakeToken = stake.stakeToken;
         emit UserStaked(msg.sender, _pid, _amount);
     }
 

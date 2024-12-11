@@ -42,7 +42,6 @@ export interface StakingInterface extends Interface {
       | "rewardToken"
       | "set"
       | "setStakes"
-      | "stakes"
       | "transferOwnership"
       | "unpause"
       | "upgradeTo"
@@ -117,7 +116,6 @@ export interface StakingInterface extends Interface {
     functionFragment: "setStakes",
     values: [BigNumberish, AddressLike]
   ): string;
-  encodeFunctionData(functionFragment: "stakes", values: [AddressLike]): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
     values: [AddressLike]
@@ -183,7 +181,6 @@ export interface StakingInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "set", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "setStakes", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
     data: BytesLike
@@ -467,19 +464,6 @@ export interface Staking extends BaseContract {
     "nonpayable"
   >;
 
-  stakes: TypedContractMethod<
-    [arg0: AddressLike],
-    [
-      [string, bigint, bigint, boolean] & {
-        stakeToken: string;
-        convertRate: bigint;
-        lockTimePeriod: bigint;
-        isActive: boolean;
-      }
-    ],
-    "view"
-  >;
-
   transferOwnership: TypedContractMethod<
     [newOwner: AddressLike],
     [void],
@@ -517,7 +501,6 @@ export interface Staking extends BaseContract {
     [
       [
         string,
-        string,
         bigint,
         bigint,
         bigint,
@@ -528,7 +511,6 @@ export interface Staking extends BaseContract {
         bigint,
         boolean
       ] & {
-        user: string;
         stakeToken: string;
         stakeAmount: bigint;
         interestRate: bigint;
@@ -644,20 +626,6 @@ export interface Staking extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "stakes"
-  ): TypedContractMethod<
-    [arg0: AddressLike],
-    [
-      [string, bigint, bigint, boolean] & {
-        stakeToken: string;
-        convertRate: bigint;
-        lockTimePeriod: bigint;
-        isActive: boolean;
-      }
-    ],
-    "view"
-  >;
-  getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
   getFunction(
@@ -698,7 +666,6 @@ export interface Staking extends BaseContract {
     [
       [
         string,
-        string,
         bigint,
         bigint,
         bigint,
@@ -709,7 +676,6 @@ export interface Staking extends BaseContract {
         bigint,
         boolean
       ] & {
-        user: string;
         stakeToken: string;
         stakeAmount: bigint;
         interestRate: bigint;

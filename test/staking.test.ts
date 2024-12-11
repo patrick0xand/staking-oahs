@@ -8,7 +8,7 @@ import {ethers, upgrades} from "hardhat";
 
 describe("Staking", function () {
   async function deployDexFixture() {
-    const [owner, otherAccount] = await ethers.getSigners();
+    const [owner, addr1, otherAccount] = await ethers.getSigners();
 
     const USDT = await ethers.getContractFactory("MockERC20");
     const usdt = await USDT.deploy("USDTToken", "USDT");
@@ -33,7 +33,7 @@ describe("Staking", function () {
     // mint
     usdt.mint(owner, 1000n ** 18n);
 
-    return {contract, owner, otherAccount, usdt};
+    return {contract, owner, otherAccount, addr1, usdt, oah};
   }
 
   describe("Deployment", function () {
@@ -44,39 +44,291 @@ describe("Staking", function () {
     });
   });
 
-  // describe("SetSupportedTokens", function () {
-  //   it("The function should succeed", async function () {
-  //     const {contract, owner} = await loadFixture(deployDexFixture);
+  describe("setStakes", function () {
+    it("should correctly add a new stake for Period.Days_7", async function () {
+      const {contract, usdt} = await loadFixture(deployDexFixture);
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
 
-  //     await expect(contract.setSupportedTokens([WETH9, DAI], [true, false]))
-  //       .to.emit(contract, "SupportedTokenUpdated")
-  //       .withArgs([WETH9, DAI], [true, false]); // We accept any value as `when` arg
-  //   });
+      const poolInfo = await contract.poolInfo(0);
 
-  //   it("The function should fail: wrong owner", async function () {
-  //     const {contract, otherAccount} = await loadFixture(deployDexFixture);
+      expect(poolInfo.stakeToken).to.equal(usdt.target);
+      expect(poolInfo.convertRate).to.equal(30000 * 7 * 24 * 60 * 60); // 7 days in seconds
+      expect(poolInfo.lockTimePeriod).to.equal(7 * 24 * 60 * 60); // 7 days in seconds
+      expect(poolInfo.isActive).to.equal(true);
+    });
 
-  //     await expect(
-  //       contract
-  //         .connect(otherAccount)
-  //         .setSupportedTokens([WETH9, USDC], [true, false])
-  //     ).to.be.revertedWith("Ownable: caller is not the owner");
-  //   });
-  // });
+    it("should correctly add a new stake for Period.Days_60", async function () {
+      const {contract, usdt} = await loadFixture(deployDexFixture);
+      await contract.setStakes(1, usdt.target); // Period.Days_60 = 1
 
-  // describe.only("Deposit", function () {
-  //   it("The function should succeed", async function () {
-  //     const amountIn = 10n ** 18n;
-  //     const {contract, usdc, owner} = await loadFixture(deployDexFixture);
-  //     contract.setSupportedTokens([usdc], [true]);
-  //     await usdc.approve(contract, amountIn);
-  //     const tx = await contract.deposit(usdc, amountIn);
-  //     await expect(tx)
-  //       .to.emit(contract, "Deposited")
-  //       .withArgs(owner, usdc, amountIn);
-  //   });
-  // });
-  describe("test stake & withdraw, time lock and rewards", function () {
+      const poolInfo = await contract.poolInfo(0);
 
+      expect(poolInfo.stakeToken).to.equal(usdt.target);
+      expect(poolInfo.convertRate).to.equal(30000 * 60 * 24 * 60 * 60); // 60 days in seconds
+      expect(poolInfo.lockTimePeriod).to.equal(60 * 24 * 60 * 60); // 60 days in seconds
+      expect(poolInfo.isActive).to.equal(true);
+    });
+
+    it("should correctly add a new stake for Period.Days_120", async function () {
+      const {contract, usdt} = await loadFixture(deployDexFixture);
+      await contract.setStakes(2, usdt.target); // Period.Days_120 = 2
+
+      const poolInfo = await contract.poolInfo(0);
+
+      expect(poolInfo.stakeToken).to.equal(usdt.target);
+      expect(poolInfo.convertRate).to.equal(30000 * 120 * 24 * 60 * 60); // 120 days in seconds
+      expect(poolInfo.lockTimePeriod).to.equal(120 * 24 * 60 * 60); // 120 days in seconds
+      expect(poolInfo.isActive).to.equal(true);
+    });
+
+    it("should revert if an invalid period is passed", async function () {
+      const {contract, usdt} = await loadFixture(deployDexFixture);
+      await expect(contract.setStakes(3, usdt.target)).to.be.reverted; // Invalid period
+    });
+
+    it("should revert if called by non-owner", async function () {
+      const {contract, usdt, otherAccount} = await loadFixture(
+        deployDexFixture
+      );
+      await expect(contract.connect(otherAccount).setStakes(0, usdt.target)) // Period.Days_7 = 0
+        .to.be.revertedWith("Ownable: caller is not the owner");
+    });
+  });
+
+  describe("set", function () {
+    it("should update the interest rate of an existing stake", async function () {
+      const {contract, usdt} = await loadFixture(deployDexFixture);
+      await contract.setStakes(0, usdt.target);
+
+      const initialPoolInfo = await contract.poolInfo(0);
+      expect(initialPoolInfo.convertRate).to.equal(30000 * 7 * 24 * 60 * 60);
+
+      const newInterestRate = ethers.parseUnits("1500", "wei");
+      await contract.set(0, newInterestRate);
+
+      const updatedPoolInfo = await contract.poolInfo(0);
+      expect(updatedPoolInfo.convertRate).to.equal(newInterestRate);
+    });
+
+    it("should revert if non-owner tries to update interest rate", async function () {
+      const {contract, usdt, otherAccount} = await loadFixture(
+        deployDexFixture
+      );
+      await contract.setStakes(0, usdt.target);
+
+      const newInterestRate = ethers.parseUnits("1500", "wei");
+      await expect(
+        contract.connect(otherAccount).set(0, newInterestRate)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("should revert if updating a non-existent pool", async function () {
+      const {contract} = await loadFixture(deployDexFixture);
+      const newInterestRate = ethers.parseUnits("1500", "wei");
+      await expect(contract.set(999, newInterestRate)).to.be.reverted; // Non-existent pool ID
+    });
+  });
+
+  describe("pause-unpause", function () {
+    it("should pause the contract", async function () {
+      const {contract} = await loadFixture(deployDexFixture);
+      await contract.pause();
+
+      const paused = await contract.paused();
+      expect(paused).to.equal(true);
+    });
+
+    it("should unpause the contract", async function () {
+      const {contract} = await loadFixture(deployDexFixture);
+      await contract.pause();
+      await contract.unpause();
+
+      const paused = await contract.paused();
+      expect(paused).to.equal(false);
+    });
+
+    it("should revert when non-owner tries to pause the contract", async function () {
+      const {contract, otherAccount} = await loadFixture(deployDexFixture);
+      await expect(contract.connect(otherAccount).pause()).to.be.revertedWith(
+        "Ownable: caller is not the owner"
+      );
+    });
+
+    it("should revert when non-owner tries to unpause the contract", async function () {
+      const {contract, otherAccount} = await loadFixture(deployDexFixture);
+      await contract.pause();
+      await expect(contract.connect(otherAccount).unpause()).to.be.revertedWith(
+        "Ownable: caller is not the owner"
+      );
+    });
+  });
+
+  describe("newStake", function () {
+    it("should allow a user to stake tokens", async function () {
+      const {contract, usdt, addr1} = await loadFixture(deployDexFixture);
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+
+      const stakeAmount = ethers.parseEther("100");
+      await usdt.mint(addr1, stakeAmount);
+      await usdt.connect(addr1).approve(contract, stakeAmount);
+
+      await contract.connect(addr1).newStake(0, stakeAmount);
+
+      const userStake = await contract.userStakes(0, addr1.address);
+      expect(userStake.stakeAmount).to.equal(stakeAmount);
+      expect(userStake.stakeToken).to.equal(usdt.target);
+    });
+
+    it("should revert if stake amount is zero", async function () {
+      const {contract, usdt, addr1} = await loadFixture(deployDexFixture);
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+
+      await expect(contract.connect(addr1).newStake(0, 0)).to.be.revertedWith(
+        "stake amount must be > 0"
+      );
+    });
+
+    it("should transfer tokens from the user to the contract", async function () {
+      const {contract, usdt, addr1} = await loadFixture(deployDexFixture);
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+
+      const stakeAmount = ethers.parseEther("100");
+      await usdt.mint(addr1.address, stakeAmount);
+      await usdt.connect(addr1).approve(contract, stakeAmount);
+
+      const initialBalance = await usdt.balanceOf(addr1.address);
+
+      await contract.connect(addr1).newStake(0, stakeAmount);
+
+      const finalBalance = await usdt.balanceOf(addr1.address);
+      const contractBalance = await usdt.balanceOf(contract);
+
+      expect(finalBalance).to.equal(initialBalance - stakeAmount);
+      expect(contractBalance).to.equal(stakeAmount);
+    });
+  });
+
+  describe.only("withdraw", function () {
+    it("should allow a user to withdraw their staked tokens after the lock period", async function () {
+      const {contract, usdt, addr1} = await loadFixture(deployDexFixture);
+
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+
+      const stakeAmount = ethers.parseEther("10");
+
+      // Approve and stake tokens
+      await usdt.mint(addr1, stakeAmount);
+      await usdt.connect(addr1).approve(contract, stakeAmount);
+      await contract.connect(addr1).newStake(0, stakeAmount);
+
+      // Fast-forward time beyond the lock period (7 days)
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine", []);
+
+      // Withdraw staked tokens
+      await expect(contract.connect(addr1).withdraw(0, stakeAmount))
+        .to.emit(contract, "UserWithdrew")
+        .withArgs(addr1.address, 0, stakeAmount);
+
+      // Check user's balance after withdrawal
+      const userBalance = await usdt.balanceOf(addr1);
+      expect(userBalance).to.equal(stakeAmount);
+
+      // Check contract's balance
+      const contractBalance = await usdt.balanceOf(contract);
+      expect(contractBalance).to.equal(0);
+    });
+
+    it("should revert if the user tries to withdraw before the lock period", async function () {
+      const {contract, usdt, addr1} = await loadFixture(deployDexFixture);
+      const stakeAmount = ethers.parseEther("10");
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+      await usdt.mint(addr1, stakeAmount);
+
+      // Approve and stake tokens
+      await usdt.connect(addr1).approve(contract, stakeAmount);
+      await contract.connect(addr1).newStake(0, stakeAmount);
+
+      // Attempt to withdraw before the lock period ends
+      await expect(
+        contract.connect(addr1).withdraw(0, stakeAmount)
+      ).to.be.revertedWith("staked tokens are still locked");
+    });
+
+    it("should revert if the user tries to withdraw more than their staked amount", async function () {
+      const {contract, usdt, addr1} = await loadFixture(deployDexFixture);
+      const stakeAmount = ethers.parseEther("10");
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+      await usdt.mint(addr1, stakeAmount);
+
+      // Approve and stake tokens
+      await usdt.connect(addr1).approve(contract, stakeAmount);
+      await contract.connect(addr1).newStake(0, stakeAmount);
+
+      // Fast-forward time beyond the lock period (7 days)
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine", []);
+
+      // Attempt to withdraw more than staked amount
+      const excessAmount = ethers.parseEther("15");
+      await expect(
+        contract.connect(addr1).withdraw(0, excessAmount)
+      ).to.be.revertedWith("withdraw amount > staked amount");
+    });
+
+    it("should revert if the user tries to withdraw from a completed stake", async function () {
+      const {contract, usdt, addr1} = await loadFixture(deployDexFixture);
+      const stakeAmount = ethers.parseEther("10");
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+      await usdt.mint(addr1, stakeAmount);
+
+      // Approve and stake tokens
+      await usdt.connect(addr1).approve(contract, stakeAmount);
+      await contract.connect(addr1).newStake(0, stakeAmount);
+
+      // Fast-forward time beyond the lock period (7 days)
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine", []);
+
+      // Complete the stake by withdrawing all tokens
+      await contract.connect(addr1).withdraw(0, stakeAmount);
+
+      // Attempt to withdraw again
+      await expect(
+        contract.connect(addr1).withdraw(0, stakeAmount)
+      ).to.be.revertedWith("ERR_USER_STAKE_COMPLETED");
+    });
+  });
+
+  describe.only("claim", function () {
+    it("should allow a user to withdraw their staked tokens after the lock period", async function () {
+      const {contract, usdt, addr1} = await loadFixture(deployDexFixture);
+
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+
+      const stakeAmount = ethers.parseEther("10");
+
+      // Approve and stake tokens
+      await usdt.mint(addr1, stakeAmount);
+      await usdt.connect(addr1).approve(contract, stakeAmount);
+      await contract.connect(addr1).newStake(0, stakeAmount);
+
+      // Fast-forward time beyond the lock period (7 days)
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60]);
+      await ethers.provider.send("evm_mine", []);
+
+      // Withdraw staked tokens
+      await expect(contract.connect(addr1).withdraw(0, stakeAmount))
+        .to.emit(contract, "UserWithdrew")
+        .withArgs(addr1.address, 0, stakeAmount);
+
+      // Check user's balance after withdrawal
+      const userBalance = await usdt.balanceOf(addr1);
+      expect(userBalance).to.equal(stakeAmount);
+
+      // Check contract's balance
+      const contractBalance = await usdt.balanceOf(contract);
+      expect(contractBalance).to.equal(0);
+    });
   });
 });
