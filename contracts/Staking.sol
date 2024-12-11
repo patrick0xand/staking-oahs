@@ -24,7 +24,6 @@ contract Storage {
     uint256 internal SECONDS_IN_ONE_DAY;
 
     // Values
-    mapping(address => Stake) public stakes; // pairId => Stake
     Stake[] public poolInfo;
     mapping(uint256 => mapping(address => UserStake)) public userStakes; // id => user => UserStake
     uint256 internal userStakeId;
@@ -45,7 +44,7 @@ contract Storage {
         uint256 receiveAmount;
         uint256 interestAmount;
         uint256 startDate;
-        uint256 interestWithdrew;
+        uint256 accumulatedRewards;
         uint256 withdrawTime;
         Period period;
         bool completed;
@@ -110,6 +109,10 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         return uint160(value);
     }
 
+    function userAccumulatedRewards(uint256 _pid, address _staker) external view returns (uint256 rewards) {
+        return userStakes[_pid][_staker].accumulatedRewards;
+    }
+
     function getUnlockTime(uint256 _pid, address _staker) public view returns (uint48 unlockTime) {
         return userStakes[_pid][_staker].stakeAmount > 0 ? toUint48(userStakes[_pid][_staker].withdrawTime) : MAX_TIME;
     }
@@ -131,10 +134,10 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
             revert("Owner: Cannot set to this period");
         }
         Stake memory stake = Stake({
-            stakeToken : address(_token),
-            convertRate: 30000,
-            lockTimePeriod : _lockTimePeriod,
-            isActive : true
+            stakeToken: address(_token),
+            convertRate: 30000 * _lockTimePeriod,
+            lockTimePeriod: _lockTimePeriod,
+            isActive: true
         });
         poolInfo.push(stake);
     }
@@ -159,7 +162,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         uint256 timePeriod;
         timePeriod = block.timestamp - user.startDate;
 
-            uint48 stakeRewardEndTime = toUint48(user.startDate + stake.lockTimePeriod);
+        uint48 stakeRewardEndTime = toUint48(user.startDate + stake.lockTimePeriod);
 
         if (block.timestamp <= stakeRewardEndTime) {
             return 0;
@@ -170,13 +173,27 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         }
     }
 
+    function userTotalRewards(uint256 _pid, address _staker) public view returns (uint256) {
+        return userClaimableRewards(_pid, _staker) + userStakes[_pid][_staker].accumulatedRewards;
+    }
+
+    function getEarnedRewardTokens(uint256 _pid, address _staker) public view returns (uint256 claimableRewardTokens) {
+        Stake storage stake = poolInfo[_pid];
+
+        if (address(rewardToken) == address(0) || stake.convertRate == 0) {
+            return 0;
+        } else {
+            return userTotalRewards(_pid, _staker) / stake.convertRate; // safe
+        }
+    }
+
     // User functions
     function _updateRewards(uint256 _pid, address _staker) internal returns (UserStake storage userStake) {
         // calculate reward credits using previous staking amount and previous time period
         // add new reward credits to already accumulated reward credits
         userStake = userStakes[_pid][_staker];
         uint256 totalInterest = userClaimableRewards(_pid, _staker);
-        userStake.interestAmount += totalInterest;
+        userStake.accumulatedRewards += totalInterest;
 
         // update stake Time to current time (start new reward period)
         // will also reset userClaimableRewards()
@@ -234,22 +251,14 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
 
         uint256 interestToWithdraw = userClaimableRewards(_pid, msg.sender);
         require(interestToWithdraw > 0, "no tokens to claim");
-        userStake.interestAmount = 0;
+        userStake.accumulatedRewards = 0;
 
         // Transfer
         IERC20Upgradeable oahToken = IERC20Upgradeable(rewardToken);
         oahToken.safeTransfer(msg.sender, interestToWithdraw);
-
-        userStake.interestWithdrew += interestToWithdraw;
 
         emit UserClaimed(_pid, msg.sender, rewardToken, interestToWithdraw);
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
 }
-
-// Step to test:
-// setStakes: [["<StakeTokenAddr>",1000,1200,true]]
-// mint OAH to proxy
-// call newStake function
-// claim-withdraw

@@ -28,6 +28,7 @@ export interface StakingInterface extends Interface {
     nameOrSignature:
       | "MAX_TIME"
       | "claim"
+      | "getEarnedRewardTokens"
       | "getUnlockTime"
       | "initialize"
       | "newStake"
@@ -46,8 +47,10 @@ export interface StakingInterface extends Interface {
       | "unpause"
       | "upgradeTo"
       | "upgradeToAndCall"
+      | "userAccumulatedRewards"
       | "userClaimableRewards"
       | "userStakes"
+      | "userTotalRewards"
       | "withdraw"
   ): FunctionFragment;
 
@@ -67,6 +70,10 @@ export interface StakingInterface extends Interface {
 
   encodeFunctionData(functionFragment: "MAX_TIME", values?: undefined): string;
   encodeFunctionData(functionFragment: "claim", values: [BigNumberish]): string;
+  encodeFunctionData(
+    functionFragment: "getEarnedRewardTokens",
+    values: [BigNumberish, AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "getUnlockTime",
     values: [BigNumberish, AddressLike]
@@ -125,11 +132,19 @@ export interface StakingInterface extends Interface {
     values: [AddressLike, BytesLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "userAccumulatedRewards",
+    values: [BigNumberish, AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "userClaimableRewards",
     values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "userStakes",
+    values: [BigNumberish, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "userTotalRewards",
     values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
@@ -139,6 +154,10 @@ export interface StakingInterface extends Interface {
 
   decodeFunctionResult(functionFragment: "MAX_TIME", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "claim", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getEarnedRewardTokens",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getUnlockTime",
     data: BytesLike
@@ -176,10 +195,18 @@ export interface StakingInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "userAccumulatedRewards",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "userClaimableRewards",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "userStakes", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "userTotalRewards",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 }
 
@@ -377,6 +404,12 @@ export interface Staking extends BaseContract {
 
   claim: TypedContractMethod<[_pid: BigNumberish], [void], "nonpayable">;
 
+  getEarnedRewardTokens: TypedContractMethod<
+    [_pid: BigNumberish, _staker: AddressLike],
+    [bigint],
+    "view"
+  >;
+
   getUnlockTime: TypedContractMethod<
     [_pid: BigNumberish, _staker: AddressLike],
     [bigint],
@@ -467,6 +500,12 @@ export interface Staking extends BaseContract {
     "payable"
   >;
 
+  userAccumulatedRewards: TypedContractMethod<
+    [_pid: BigNumberish, _staker: AddressLike],
+    [bigint],
+    "view"
+  >;
+
   userClaimableRewards: TypedContractMethod<
     [_pid: BigNumberish, _staker: AddressLike],
     [bigint],
@@ -496,12 +535,18 @@ export interface Staking extends BaseContract {
         receiveAmount: bigint;
         interestAmount: bigint;
         startDate: bigint;
-        interestWithdrew: bigint;
+        accumulatedRewards: bigint;
         withdrawTime: bigint;
         period: bigint;
         completed: boolean;
       }
     ],
+    "view"
+  >;
+
+  userTotalRewards: TypedContractMethod<
+    [_pid: BigNumberish, _staker: AddressLike],
+    [bigint],
     "view"
   >;
 
@@ -521,6 +566,13 @@ export interface Staking extends BaseContract {
   getFunction(
     nameOrSignature: "claim"
   ): TypedContractMethod<[_pid: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "getEarnedRewardTokens"
+  ): TypedContractMethod<
+    [_pid: BigNumberish, _staker: AddressLike],
+    [bigint],
+    "view"
+  >;
   getFunction(
     nameOrSignature: "getUnlockTime"
   ): TypedContractMethod<
@@ -626,6 +678,13 @@ export interface Staking extends BaseContract {
     "payable"
   >;
   getFunction(
+    nameOrSignature: "userAccumulatedRewards"
+  ): TypedContractMethod<
+    [_pid: BigNumberish, _staker: AddressLike],
+    [bigint],
+    "view"
+  >;
+  getFunction(
     nameOrSignature: "userClaimableRewards"
   ): TypedContractMethod<
     [_pid: BigNumberish, _staker: AddressLike],
@@ -657,12 +716,19 @@ export interface Staking extends BaseContract {
         receiveAmount: bigint;
         interestAmount: bigint;
         startDate: bigint;
-        interestWithdrew: bigint;
+        accumulatedRewards: bigint;
         withdrawTime: bigint;
         period: bigint;
         completed: boolean;
       }
     ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "userTotalRewards"
+  ): TypedContractMethod<
+    [_pid: BigNumberish, _staker: AddressLike],
+    [bigint],
     "view"
   >;
   getFunction(

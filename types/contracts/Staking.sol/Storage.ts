@@ -219,7 +219,7 @@ export interface Storage extends BaseContract {
         receiveAmount: bigint;
         interestAmount: bigint;
         startDate: bigint;
-        interestWithdrew: bigint;
+        accumulatedRewards: bigint;
         withdrawTime: bigint;
         period: bigint;
         completed: boolean;
@@ -291,7 +291,7 @@ export interface Storage extends BaseContract {
         receiveAmount: bigint;
         interestAmount: bigint;
         startDate: bigint;
-        interestWithdrew: bigint;
+        accumulatedRewards: bigint;
         withdrawTime: bigint;
         period: bigint;
         completed: boolean;

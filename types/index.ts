@@ -30,6 +30,8 @@ export type { IERC20Upgradeable } from "./@openzeppelin/contracts-upgradeable/to
 export { IERC20Upgradeable__factory } from "./factories/@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable__factory";
 export type { ContextUpgradeable } from "./@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable";
 export { ContextUpgradeable__factory } from "./factories/@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable__factory";
+export type { Ownable } from "./@openzeppelin/contracts/access/Ownable";
+export { Ownable__factory } from "./factories/@openzeppelin/contracts/access/Ownable__factory";
 export type { ERC20 } from "./@openzeppelin/contracts/token/ERC20/ERC20";
 export { ERC20__factory } from "./factories/@openzeppelin/contracts/token/ERC20/ERC20__factory";
 export type { IERC20Metadata } from "./@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata";
@@ -38,6 +40,8 @@ export type { IERC20 } from "./@openzeppelin/contracts/token/ERC20/IERC20";
 export { IERC20__factory } from "./factories/@openzeppelin/contracts/token/ERC20/IERC20__factory";
 export type { MockERC20 } from "./contracts/mock/MockERC20";
 export { MockERC20__factory } from "./factories/contracts/mock/MockERC20__factory";
+export type { ETH } from "./contracts/Staking.sol/ETH";
+export { ETH__factory } from "./factories/contracts/Staking.sol/ETH__factory";
 export type { Staking } from "./contracts/Staking.sol/Staking";
 export { Staking__factory } from "./factories/contracts/Staking.sol/Staking__factory";
 export type { Storage } from "./contracts/Staking.sol/Storage";
