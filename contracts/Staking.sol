@@ -152,19 +152,18 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     }
 
     function userClaimableRewards(uint256 _pid, address _staker) public view returns (uint256) {
-        Stake storage stake = poolInfo[_pid];
         UserStake storage user = userStakes[_pid][_staker];
         if (block.timestamp <= user.startDate) return 0;
+
+        if (user.withdrawTime <= user.startDate) return 0;
 
         uint256 timePeriod;
         timePeriod = block.timestamp - user.startDate;
 
-        uint48 stakeRewardEndTime = toUint48(user.startDate + stake.lockTimePeriod);
-
-        if (block.timestamp <= stakeRewardEndTime) {
+        if (block.timestamp <= user.withdrawTime) {
             timePeriod = block.timestamp - user.startDate;
         } else {
-            timePeriod = stakeRewardEndTime - user.startDate;
+            timePeriod = user.withdrawTime - user.startDate;
         }
 
         return timePeriod * user.stakeAmount;
@@ -222,17 +221,17 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     function withdraw(uint256 _pid, uint256 _amount) external nonReentrant {
         require(_amount > 0, "amount to withdraw not > 0");
         require(block.timestamp > getUnlockTime(_pid, msg.sender), "staked tokens are still locked");
-
+        Stake storage pool = stakes[_pid];
         UserStake storage userStake = _updateRewards(_pid, msg.sender); // update rewards and return reference to user
 
         require(_amount <= userStake.stakeAmount, "withdraw amount > staked amount");
         require(!userStake.completed, ERR_USER_STAKE_COMPLETED);
         userStake.stakeAmount -= toUint160(_amount);
 
-        if (userStake.stakeToken == address(0)) {
+        if (pool.stakeToken == address(0)) {
             payable(msg.sender).transfer(_amount);
         } else {
-            IERC20Upgradeable stakeToken = IERC20Upgradeable(userStake.stakeToken);
+            IERC20Upgradeable stakeToken = IERC20Upgradeable(pool.stakeToken);
             stakeToken.safeTransfer(msg.sender, _amount);
         }
 
