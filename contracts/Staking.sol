@@ -12,20 +12,14 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeab
 
 contract Storage {
     // Errors
-    string internal ERR_INVALID_LENGTH;
     string internal ERR_STAKE_NOT_ACTIVE;
     string internal ERR_INVALID_NEW_STAKE_AMOUNT;
-    string internal ERR_USER_STAKE_COMPLETED;
-    string internal ERR_INVALID_USER_STAKE_OWNER;
-    string internal ERR_NO_INTEREST_TO_WITHDRAW;
-    string internal ERR_INTEREST_TO_WITHDRAW_COMPLETED;
 
     uint256 internal BASE_CONVERT;
 
     // Values
     Stake[] public stakes;
     mapping(uint256 => mapping(address => UserStake)) public userStakes; // id => user => UserStake
-    uint256 internal userStakeId;
     address public rewardToken;
 
     struct Stake {
@@ -36,16 +30,10 @@ contract Storage {
     }
 
     struct UserStake {
-        address stakeToken;
         uint256 stakeAmount;
-        uint256 interestRate;
-        uint256 receiveAmount;
-        uint256 interestAmount;
         uint256 startDate;
         uint256 accumulatedRewards;
         uint256 withdrawTime;
-        Period period;
-        bool completed;
     }
 
     // Enums
@@ -75,18 +63,12 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         __Ownable_init();
         __Pausable_init();
         __ReentrancyGuard_init();
-        userStakeId = 0;
         rewardToken = _oahToken;
         transferOwnership(_owner);
 
         // Errors
-        ERR_INVALID_LENGTH = "ERR_INVALID_LENGTH";
         ERR_STAKE_NOT_ACTIVE = "ERR_STAKE_NOT_ACTIVE";
         ERR_INVALID_NEW_STAKE_AMOUNT = "ERR_INVALID_NEW_STAKE_AMOUNT";
-        ERR_USER_STAKE_COMPLETED = "ERR_USER_STAKE_COMPLETED";
-        ERR_INVALID_USER_STAKE_OWNER = "ERR_INVALID_USER_STAKE_OWNER";
-        ERR_NO_INTEREST_TO_WITHDRAW = "ERR_NO_INTEREST_TO_WITHDRAW";
-        ERR_INTEREST_TO_WITHDRAW_COMPLETED = "ERR_INTEREST_TO_WITHDRAW_COMPLETED";
 
         // init value
         BASE_CONVERT = 1000;
@@ -236,7 +218,6 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     function claim(uint256 _pid) external nonReentrant {
         require(rewardToken != address(0), "no reward token contract");
         UserStake storage userStake = userStakes[_pid][msg.sender];
-        require(!userStake.completed, ERR_USER_STAKE_COMPLETED);
 
         uint256 interestToWithdraw = getEarnedRewardTokens(_pid, msg.sender);
         require(interestToWithdraw > 0, "no tokens to claim");
