@@ -16,6 +16,8 @@ describe("Staking", function () {
     const OAH = await ethers.getContractFactory("MockERC20");
     const oah = await OAH.deploy("OAH Reward Token", "OAH");
     const oahAddr = await oah.getAddress();
+    const newOAH = await OAH.deploy("OAH Reward Token", "OAH1");
+    const newOahAddr = await newOAH.getAddress();
     const ImplStaking = await ethers.getContractFactory("Staking");
     const contract = await upgrades.deployProxy(
       ImplStaking,
@@ -34,7 +36,7 @@ describe("Staking", function () {
     // usdt.mint(owner, 1000n ** 18n);
     await oah.mint(contract, ethers.parseEther("1000000"));
 
-    return {contract, owner, otherAccount, addr1, usdt, oah};
+    return {contract, owner, otherAccount, addr1, usdt, oah, newOahAddr};
   }
 
   describe("Deployment", function () {
@@ -53,7 +55,9 @@ describe("Staking", function () {
       const stakes = await contract.stakes(0);
 
       expect(stakes.stakeToken).to.equal(usdt.target);
-      expect(stakes.convertRate).to.equal(30000 * 7 * 24 * 60 * 60); // 7 days in seconds
+      expect(stakes.convertRate).to.equal(
+        ((30000 * 100 * 365) / 10) * 24 * 60 * 60
+      ); // 7 days in seconds
       expect(stakes.lockTimePeriod).to.equal(7 * 24 * 60 * 60); // 7 days in seconds
       expect(stakes.isActive).to.equal(true);
 
@@ -69,7 +73,9 @@ describe("Staking", function () {
       const stakes = await contract.stakes(0);
 
       expect(stakes.stakeToken).to.equal(usdt.target);
-      expect(stakes.convertRate).to.equal(30000 * 60 * 24 * 60 * 60); // 60 days in seconds
+      expect(stakes.convertRate).to.equal(
+        ((30000 * 100 * 365) / 10) * 24 * 60 * 60
+      ); // 60 days in seconds
       expect(stakes.lockTimePeriod).to.equal(60 * 24 * 60 * 60); // 60 days in seconds
       expect(stakes.isActive).to.equal(true);
     });
@@ -81,7 +87,9 @@ describe("Staking", function () {
       const stakes = await contract.stakes(0);
 
       expect(stakes.stakeToken).to.equal(usdt.target);
-      expect(stakes.convertRate).to.equal(30000 * 120 * 24 * 60 * 60); // 120 days in seconds
+      expect(stakes.convertRate).to.equal(
+        ((30000 * 100 * 365) / 10) * 24 * 60 * 60
+      ); // 120 days in seconds
       expect(stakes.lockTimePeriod).to.equal(120 * 24 * 60 * 60); // 120 days in seconds
       expect(stakes.isActive).to.equal(true);
     });
@@ -106,7 +114,9 @@ describe("Staking", function () {
       await contract.setStakes(0, usdt.target);
 
       const initialstakes = await contract.stakes(0);
-      expect(initialstakes.convertRate).to.equal(30000 * 7 * 24 * 60 * 60);
+      expect(initialstakes.convertRate).to.equal(
+        ((30000 * 100 * 365) / 10) * 24 * 60 * 60
+      );
 
       const newInterestRate = ethers.parseUnits("1500", "wei");
       await contract.set(0, newInterestRate);
@@ -131,6 +141,49 @@ describe("Staking", function () {
       const {contract} = await loadFixture(deployDexFixture);
       const newInterestRate = ethers.parseUnits("1500", "wei");
       await expect(contract.set(999, newInterestRate)).to.be.reverted; // Non-existent pool ID
+    });
+  });
+
+  describe("setRewardToken", function () {
+    it("should update the interest rate of an existing stake", async function () {
+      const {contract, usdt, oah, newOahAddr, owner} = await loadFixture(
+        deployDexFixture
+      );
+      await contract.setStakes(0, usdt.target);
+
+      // Check initial reward token
+      expect(await contract.rewardToken()).to.equal(oah);
+
+      // Get initial balances
+      const ownerInitialBalance = await oah.balanceOf(owner);
+      const stakingInitialBalance = await oah.balanceOf(contract);
+
+      // Set the new reward token
+      await expect(contract.connect(owner).setRewardToken(newOahAddr))
+        .to.emit(contract, "RewardTokenChanged")
+        .withArgs(oah, stakingInitialBalance, newOahAddr);
+
+      // Check that the reward token has been updated
+      expect(await contract.rewardToken()).to.equal(newOahAddr);
+
+      // Check that the remaining balance of the old reward token has been returned to the owner
+      const ownerFinalBalance = await oah.balanceOf(owner.address);
+      expect(ownerFinalBalance - ownerInitialBalance).to.equal(
+        stakingInitialBalance
+      );
+
+      // Check that the staking contract no longer holds any old reward tokens
+      expect(await oah.balanceOf(contract)).to.equal(0);
+    });
+
+    it("should fail if a non-owner tries to set the reward token", async function () {
+      const {contract, usdt, newOahAddr, addr1} = await loadFixture(
+        deployDexFixture
+      );
+
+      await expect(
+        contract.connect(addr1).setRewardToken(newOahAddr)
+      ).to.be.revertedWith("Ownable: caller is not the owner");
     });
   });
 
@@ -402,6 +455,56 @@ describe("Staking", function () {
       const rewards = await contract.userAccumulatedRewards(0, addr1);
 
       expect(rewards).to.equal(0);
+    });
+
+    it("should return 0 when convertRate equal 0", async function () {
+      const {contract, usdt, addr1} = await loadFixture(deployDexFixture);
+      await contract.setStakes(0, usdt.target);
+      const stakeAmount = ethers.parseEther("1");
+
+      await usdt.mint(addr1, stakeAmount);
+      await usdt.connect(addr1).approve(contract, stakeAmount);
+      await contract.connect(addr1).newStake(0, stakeAmount);
+
+      await contract.set(0, 0);
+
+      const updatedstakes = await contract.stakes(0);
+      expect(await contract.getEarnedRewardTokens(0, addr1)).to.equal(0);
+    });
+
+    it("should correctly calculate rewards after the staking period ends", async function () {
+      const {contract, usdt, oah, addr1} = await loadFixture(deployDexFixture);
+      const APR = 10; // 10% APR
+      const STAKE_PERIOD = 7 * 24 * 60 * 60; // 7 days
+      const STAKE_AMOUNT = ethers.parseEther("120"); // 100 tokens
+
+      // Add a staking pool
+      await contract.setStakes(0, usdt); // Period 0 = 7 days by default
+
+      // Transfer tokens to addr1 and approve staking
+      await usdt.mint(addr1, STAKE_AMOUNT);
+      await usdt.connect(addr1).approve(contract, STAKE_AMOUNT);
+
+      // Stake tokens
+      await contract.connect(addr1).newStake(0, STAKE_AMOUNT);
+
+      // Fast forward time by 7 days
+      await ethers.provider.send("evm_increaseTime", [STAKE_PERIOD]);
+      await ethers.provider.send("evm_mine");
+
+      // Calculate expected rewards
+      const expectedRewards =
+        (STAKE_AMOUNT * BigInt(STAKE_PERIOD * APR)) /
+        (BigInt(3 * 100) * BigInt(365 * 24 * 60 * 60));
+
+      // Claim rewards
+      await expect(contract.connect(addr1).claim(0))
+        .to.emit(contract, "UserClaimed")
+        .withArgs(0, addr1, oah, expectedRewards);
+
+      // // Check final reward token balance of addr1
+      const finalBalance = await oah.balanceOf(addr1.address);
+      expect(finalBalance).to.equal(expectedRewards);
     });
   });
 });

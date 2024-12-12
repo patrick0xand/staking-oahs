@@ -49,6 +49,7 @@ contract Storage {
     event UserClaimed(uint256 id, address indexed wallet, address indexed rewardToken, uint256 claimedAmount);
 
     event RewardTokenChanged(address indexed oldRewardToken, uint256 returnedAmount, address indexed newRewardToken);
+
     uint48 public constant MAX_TIME = type(uint48).max; // = 2^48 - 1
 }
 
@@ -242,7 +243,6 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         // Transfer
         IERC20Upgradeable oahToken = IERC20Upgradeable(rewardToken);
         oahToken.safeTransfer(msg.sender, interestToWithdraw);
-
         emit UserClaimed(_pid, msg.sender, rewardToken, interestToWithdraw);
     }
 
