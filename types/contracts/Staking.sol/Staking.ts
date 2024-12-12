@@ -29,6 +29,7 @@ export interface StakingInterface extends Interface {
       | "MAX_TIME"
       | "claim"
       | "getEarnedRewardTokens"
+      | "getRewardTokenBalance"
       | "getUnlockTime"
       | "initialize"
       | "newStake"
@@ -40,6 +41,7 @@ export interface StakingInterface extends Interface {
       | "renounceOwnership"
       | "rewardToken"
       | "set"
+      | "setRewardToken"
       | "setStakes"
       | "stakes"
       | "transferOwnership"
@@ -60,6 +62,7 @@ export interface StakingInterface extends Interface {
       | "Initialized"
       | "OwnershipTransferred"
       | "Paused"
+      | "RewardTokenChanged"
       | "Unpaused"
       | "Upgraded"
       | "UserClaimed"
@@ -72,6 +75,10 @@ export interface StakingInterface extends Interface {
   encodeFunctionData(
     functionFragment: "getEarnedRewardTokens",
     values: [BigNumberish, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getRewardTokenBalance",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getUnlockTime",
@@ -107,6 +114,10 @@ export interface StakingInterface extends Interface {
   encodeFunctionData(
     functionFragment: "set",
     values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setRewardToken",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setStakes",
@@ -157,6 +168,10 @@ export interface StakingInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getRewardTokenBalance",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getUnlockTime",
     data: BytesLike
   ): Result;
@@ -179,6 +194,10 @@ export interface StakingInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "set", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "setRewardToken",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "setStakes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(
@@ -262,6 +281,28 @@ export namespace PausedEvent {
   export type OutputTuple = [account: string];
   export interface OutputObject {
     account: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RewardTokenChangedEvent {
+  export type InputTuple = [
+    oldRewardToken: AddressLike,
+    returnedAmount: BigNumberish,
+    newRewardToken: AddressLike
+  ];
+  export type OutputTuple = [
+    oldRewardToken: string,
+    returnedAmount: bigint,
+    newRewardToken: string
+  ];
+  export interface OutputObject {
+    oldRewardToken: string;
+    returnedAmount: bigint;
+    newRewardToken: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -407,6 +448,8 @@ export interface Staking extends BaseContract {
     "view"
   >;
 
+  getRewardTokenBalance: TypedContractMethod<[], [bigint], "view">;
+
   getUnlockTime: TypedContractMethod<
     [_pid: BigNumberish, _staker: AddressLike],
     [bigint],
@@ -440,7 +483,13 @@ export interface Staking extends BaseContract {
   rewardToken: TypedContractMethod<[], [string], "view">;
 
   set: TypedContractMethod<
-    [_pid: BigNumberish, _interestRate: BigNumberish],
+    [_pid: BigNumberish, _convertRate: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setRewardToken: TypedContractMethod<
+    [newRewardToken: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -539,6 +588,9 @@ export interface Staking extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "getRewardTokenBalance"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "getUnlockTime"
   ): TypedContractMethod<
     [_pid: BigNumberish, _staker: AddressLike],
@@ -583,10 +635,13 @@ export interface Staking extends BaseContract {
   getFunction(
     nameOrSignature: "set"
   ): TypedContractMethod<
-    [_pid: BigNumberish, _interestRate: BigNumberish],
+    [_pid: BigNumberish, _convertRate: BigNumberish],
     [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "setRewardToken"
+  ): TypedContractMethod<[newRewardToken: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "setStakes"
   ): TypedContractMethod<
@@ -707,6 +762,13 @@ export interface Staking extends BaseContract {
     PausedEvent.OutputObject
   >;
   getEvent(
+    key: "RewardTokenChanged"
+  ): TypedContractEvent<
+    RewardTokenChangedEvent.InputTuple,
+    RewardTokenChangedEvent.OutputTuple,
+    RewardTokenChangedEvent.OutputObject
+  >;
+  getEvent(
     key: "Unpaused"
   ): TypedContractEvent<
     UnpausedEvent.InputTuple,
@@ -796,6 +858,17 @@ export interface Staking extends BaseContract {
       PausedEvent.InputTuple,
       PausedEvent.OutputTuple,
       PausedEvent.OutputObject
+    >;
+
+    "RewardTokenChanged(address,uint256,address)": TypedContractEvent<
+      RewardTokenChangedEvent.InputTuple,
+      RewardTokenChangedEvent.OutputTuple,
+      RewardTokenChangedEvent.OutputObject
+    >;
+    RewardTokenChanged: TypedContractEvent<
+      RewardTokenChangedEvent.InputTuple,
+      RewardTokenChangedEvent.OutputTuple,
+      RewardTokenChangedEvent.OutputObject
     >;
 
     "Unpaused(address)": TypedContractEvent<

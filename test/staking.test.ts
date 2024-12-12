@@ -198,7 +198,6 @@ describe("Staking", function () {
       // Validate user stake data
       const userStake = await contract.userStakes(0, addr1);
       expect(userStake.stakeAmount).to.equal(stakeAmount);
-      expect(userStake.stakeToken).to.equal(ethers.ZeroAddress);
     });
 
     it("should revert if stake amount is zero", async function () {

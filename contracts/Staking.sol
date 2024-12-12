@@ -48,6 +48,7 @@ contract Storage {
     event UserWithdrew(address indexed user, uint256 indexed pid, uint256 amount);
     event UserClaimed(uint256 id, address indexed wallet, address indexed rewardToken, uint256 claimedAmount);
 
+    event RewardTokenChanged(address indexed oldRewardToken, uint256 returnedAmount, address indexed newRewardToken);
     uint48 public constant MAX_TIME = type(uint48).max; // = 2^48 - 1
 }
 
@@ -96,6 +97,21 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         return userStakes[_pid][_staker].stakeAmount > 0 ? toUint48(userStakes[_pid][_staker].withdrawTime) : MAX_TIME;
     }
 
+    function getRewardTokenBalance() public view returns (uint256 balance) {
+        if (rewardToken == address(0)) return 0;
+        balance = IERC20Upgradeable(rewardToken).balanceOf(address(this));
+    }
+
+    function setRewardToken(address newRewardToken) external nonReentrant onlyOwner {
+        address oldRewardToken = rewardToken;
+        uint256 rewardBalance = getRewardTokenBalance(); // balance of oldRewardToken
+        if (rewardBalance > 0) {
+            IERC20Upgradeable(oldRewardToken).safeTransfer(msg.sender, rewardBalance);
+        }
+        rewardToken = newRewardToken;
+        emit RewardTokenChanged(oldRewardToken, rewardBalance, newRewardToken);
+    }
+
     // Config functions. Can only be called by the owner.
     function setStakes(Period _period, IERC20Upgradeable _token) external onlyOwner {
         uint256 _lockTimePeriod;
@@ -117,8 +133,8 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         stakes.push(stake);
     }
 
-    function set(uint256 _pid, uint256 _interestRate) public onlyOwner {
-        stakes[_pid].convertRate = _interestRate;
+    function set(uint256 _pid, uint256 _convertRate) public onlyOwner {
+        stakes[_pid].convertRate = _convertRate;
     }
 
     function pause() public onlyOwner {

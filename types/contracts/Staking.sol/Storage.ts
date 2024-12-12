@@ -29,7 +29,11 @@ export interface StorageInterface extends Interface {
   ): FunctionFragment;
 
   getEvent(
-    nameOrSignatureOrTopic: "UserClaimed" | "UserStaked" | "UserWithdrew"
+    nameOrSignatureOrTopic:
+      | "RewardTokenChanged"
+      | "UserClaimed"
+      | "UserStaked"
+      | "UserWithdrew"
   ): EventFragment;
 
   encodeFunctionData(functionFragment: "MAX_TIME", values?: undefined): string;
@@ -53,6 +57,28 @@ export interface StorageInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "userStakes", data: BytesLike): Result;
+}
+
+export namespace RewardTokenChangedEvent {
+  export type InputTuple = [
+    oldRewardToken: AddressLike,
+    returnedAmount: BigNumberish,
+    newRewardToken: AddressLike
+  ];
+  export type OutputTuple = [
+    oldRewardToken: string,
+    returnedAmount: bigint,
+    newRewardToken: string
+  ];
+  export interface OutputObject {
+    oldRewardToken: string;
+    returnedAmount: bigint;
+    newRewardToken: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export namespace UserClaimedEvent {
@@ -229,6 +255,13 @@ export interface Storage extends BaseContract {
   >;
 
   getEvent(
+    key: "RewardTokenChanged"
+  ): TypedContractEvent<
+    RewardTokenChangedEvent.InputTuple,
+    RewardTokenChangedEvent.OutputTuple,
+    RewardTokenChangedEvent.OutputObject
+  >;
+  getEvent(
     key: "UserClaimed"
   ): TypedContractEvent<
     UserClaimedEvent.InputTuple,
@@ -251,6 +284,17 @@ export interface Storage extends BaseContract {
   >;
 
   filters: {
+    "RewardTokenChanged(address,uint256,address)": TypedContractEvent<
+      RewardTokenChangedEvent.InputTuple,
+      RewardTokenChangedEvent.OutputTuple,
+      RewardTokenChangedEvent.OutputObject
+    >;
+    RewardTokenChanged: TypedContractEvent<
+      RewardTokenChangedEvent.InputTuple,
+      RewardTokenChangedEvent.OutputTuple,
+      RewardTokenChangedEvent.OutputObject
+    >;
+
     "UserClaimed(uint256,address,address,uint256)": TypedContractEvent<
       UserClaimedEvent.InputTuple,
       UserClaimedEvent.OutputTuple,

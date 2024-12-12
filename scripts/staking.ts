@@ -4,7 +4,7 @@ async function main() {
   const Staking = await ethers.getContractFactory("Staking");
   const contract = await upgrades.deployProxy(Staking, [
     "0xE897F7A6AC22a86399C3D0d31886Ae5d073da374", // owner
-    "0x0000000000000000000000000000000000001020", // oah
+    "0xC485491BbeAAf7BCD5F1A31D8602DC7927Fd58aF", // oah
   ]);
   await contract.waitForDeployment();
   console.log("contract deployed to:", await contract.target);
