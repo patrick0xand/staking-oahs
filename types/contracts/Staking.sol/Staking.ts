@@ -499,28 +499,11 @@ export interface Staking extends BaseContract {
   userStakes: TypedContractMethod<
     [arg0: BigNumberish, arg1: AddressLike],
     [
-      [
-        string,
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        boolean
-      ] & {
-        stakeToken: string;
+      [bigint, bigint, bigint, bigint] & {
         stakeAmount: bigint;
-        interestRate: bigint;
-        receiveAmount: bigint;
-        interestAmount: bigint;
         startDate: bigint;
         accumulatedRewards: bigint;
         withdrawTime: bigint;
-        period: bigint;
-        completed: boolean;
       }
     ],
     "view"
@@ -664,28 +647,11 @@ export interface Staking extends BaseContract {
   ): TypedContractMethod<
     [arg0: BigNumberish, arg1: AddressLike],
     [
-      [
-        string,
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        bigint,
-        boolean
-      ] & {
-        stakeToken: string;
+      [bigint, bigint, bigint, bigint] & {
         stakeAmount: bigint;
-        interestRate: bigint;
-        receiveAmount: bigint;
-        interestAmount: bigint;
         startDate: bigint;
         accumulatedRewards: bigint;
         withdrawTime: bigint;
-        period: bigint;
-        completed: boolean;
       }
     ],
     "view"

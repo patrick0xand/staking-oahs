@@ -154,11 +154,11 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     function getEarnedRewardTokens(uint256 _pid, address _staker) public view returns (uint256 claimableRewardTokens) {
         Stake storage stake = stakes[_pid];
 
-        // if (address(rewardToken) == address(0) || stake.convertRate == 0) {
-        //     return 0;
-        // } else {
-        return userTotalRewards(_pid, _staker) * BASE_CONVERT / stake.convertRate; // safe
-            // }
+        if (address(rewardToken) == address(0) || stake.convertRate == 0) {
+            return 0;
+        } else {
+            return userTotalRewards(_pid, _staker) * BASE_CONVERT / stake.convertRate; // safe
+        }
     }
 
     // User functions
@@ -192,7 +192,6 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         userStake.stakeAmount = toUint160(userStake.stakeAmount + _amount);
 
         userStake.withdrawTime = toUint48(block.timestamp + stake.lockTimePeriod);
-        userStake.stakeToken = stake.stakeToken;
         emit UserStaked(msg.sender, _pid, _amount);
     }
 

@@ -181,7 +181,6 @@ describe("Staking", function () {
 
       const userStake = await contract.userStakes(0, addr1.address);
       expect(userStake.stakeAmount).to.equal(stakeAmount);
-      expect(userStake.stakeToken).to.equal(usdt.target);
     });
 
     it("should allow user to stake native coin", async function () {
