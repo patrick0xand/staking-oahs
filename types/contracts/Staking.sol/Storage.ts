@@ -25,7 +25,7 @@ import type {
 
 export interface StorageInterface extends Interface {
   getFunction(
-    nameOrSignature: "MAX_TIME" | "poolInfo" | "rewardToken" | "userStakes"
+    nameOrSignature: "MAX_TIME" | "rewardToken" | "stakes" | "userStakes"
   ): FunctionFragment;
 
   getEvent(
@@ -34,12 +34,12 @@ export interface StorageInterface extends Interface {
 
   encodeFunctionData(functionFragment: "MAX_TIME", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "poolInfo",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "rewardToken",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "stakes",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "userStakes",
@@ -47,11 +47,11 @@ export interface StorageInterface extends Interface {
   ): string;
 
   decodeFunctionResult(functionFragment: "MAX_TIME", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "poolInfo", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "rewardToken",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "userStakes", data: BytesLike): Result;
 }
 
@@ -161,7 +161,9 @@ export interface Storage extends BaseContract {
 
   MAX_TIME: TypedContractMethod<[], [bigint], "view">;
 
-  poolInfo: TypedContractMethod<
+  rewardToken: TypedContractMethod<[], [string], "view">;
+
+  stakes: TypedContractMethod<
     [arg0: BigNumberish],
     [
       [string, bigint, bigint, boolean] & {
@@ -173,8 +175,6 @@ export interface Storage extends BaseContract {
     ],
     "view"
   >;
-
-  rewardToken: TypedContractMethod<[], [string], "view">;
 
   userStakes: TypedContractMethod<
     [arg0: BigNumberish, arg1: AddressLike],
@@ -214,7 +214,10 @@ export interface Storage extends BaseContract {
     nameOrSignature: "MAX_TIME"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "poolInfo"
+    nameOrSignature: "rewardToken"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "stakes"
   ): TypedContractMethod<
     [arg0: BigNumberish],
     [
@@ -227,9 +230,6 @@ export interface Storage extends BaseContract {
     ],
     "view"
   >;
-  getFunction(
-    nameOrSignature: "rewardToken"
-  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "userStakes"
   ): TypedContractMethod<

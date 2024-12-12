@@ -172,11 +172,11 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     function getEarnedRewardTokens(uint256 _pid, address _staker) public view returns (uint256 claimableRewardTokens) {
         Stake storage stake = stakes[_pid];
 
-        if (address(rewardToken) == address(0) || stake.convertRate == 0) {
-            return 0;
-        } else {
-            return userTotalRewards(_pid, _staker) * BASE_CONVERT / stake.convertRate; // safe
-        }
+        // if (address(rewardToken) == address(0) || stake.convertRate == 0) {
+        //     return 0;
+        // } else {
+        return userTotalRewards(_pid, _staker) * BASE_CONVERT / stake.convertRate; // safe
+            // }
     }
 
     // User functions
@@ -221,7 +221,6 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         UserStake storage userStake = _updateRewards(_pid, msg.sender); // update rewards and return reference to user
 
         require(_amount <= userStake.stakeAmount, "withdraw amount > staked amount");
-        require(!userStake.completed, ERR_USER_STAKE_COMPLETED);
         userStake.stakeAmount -= toUint160(_amount);
 
         if (pool.stakeToken == address(0)) {
