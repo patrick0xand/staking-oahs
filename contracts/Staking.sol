@@ -72,7 +72,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         ERR_INVALID_NEW_STAKE_AMOUNT = "ERR_INVALID_NEW_STAKE_AMOUNT";
 
         // init value
-        BASE_CONVERT = 1000;
+        BASE_CONVERT = 100000;
     }
 
     function poolLength() external view returns (uint256) {
@@ -126,7 +126,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         }
         Stake memory stake = Stake({
             stakeToken: address(_token),
-            convertRate: 30000 * _lockTimePeriod,
+            convertRate: 30000 * 100 * 365 / 10 * 1 days, // price of OAH / APR * 365
             lockTimePeriod: _lockTimePeriod,
             isActive: true
         });
