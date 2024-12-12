@@ -35,7 +35,6 @@ export interface StakingInterface extends Interface {
       | "owner"
       | "pause"
       | "paused"
-      | "poolInfo"
       | "poolLength"
       | "proxiableUUID"
       | "renounceOwnership"
@@ -90,10 +89,6 @@ export interface StakingInterface extends Interface {
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "poolInfo",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "poolLength",
     values?: undefined
   ): string;
@@ -117,7 +112,10 @@ export interface StakingInterface extends Interface {
     functionFragment: "setStakes",
     values: [BigNumberish, AddressLike]
   ): string;
-  encodeFunctionData(functionFragment: "stakes", values: [AddressLike]): string;
+  encodeFunctionData(
+    functionFragment: "stakes",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
     values: [AddressLike]
@@ -167,7 +165,6 @@ export interface StakingInterface extends Interface {
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "poolInfo", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "poolLength", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "proxiableUUID",
@@ -434,19 +431,6 @@ export interface Staking extends BaseContract {
 
   paused: TypedContractMethod<[], [boolean], "view">;
 
-  poolInfo: TypedContractMethod<
-    [arg0: BigNumberish],
-    [
-      [string, bigint, bigint, boolean] & {
-        stakeToken: string;
-        convertRate: bigint;
-        lockTimePeriod: bigint;
-        isActive: boolean;
-      }
-    ],
-    "view"
-  >;
-
   poolLength: TypedContractMethod<[], [bigint], "view">;
 
   proxiableUUID: TypedContractMethod<[], [string], "view">;
@@ -468,7 +452,7 @@ export interface Staking extends BaseContract {
   >;
 
   stakes: TypedContractMethod<
-    [arg0: AddressLike],
+    [arg0: BigNumberish],
     [
       [string, bigint, bigint, boolean] & {
         stakeToken: string;
@@ -517,7 +501,6 @@ export interface Staking extends BaseContract {
     [
       [
         string,
-        string,
         bigint,
         bigint,
         bigint,
@@ -528,7 +511,6 @@ export interface Staking extends BaseContract {
         bigint,
         boolean
       ] & {
-        user: string;
         stakeToken: string;
         stakeAmount: bigint;
         interestRate: bigint;
@@ -604,20 +586,6 @@ export interface Staking extends BaseContract {
     nameOrSignature: "paused"
   ): TypedContractMethod<[], [boolean], "view">;
   getFunction(
-    nameOrSignature: "poolInfo"
-  ): TypedContractMethod<
-    [arg0: BigNumberish],
-    [
-      [string, bigint, bigint, boolean] & {
-        stakeToken: string;
-        convertRate: bigint;
-        lockTimePeriod: bigint;
-        isActive: boolean;
-      }
-    ],
-    "view"
-  >;
-  getFunction(
     nameOrSignature: "poolLength"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
@@ -646,7 +614,7 @@ export interface Staking extends BaseContract {
   getFunction(
     nameOrSignature: "stakes"
   ): TypedContractMethod<
-    [arg0: AddressLike],
+    [arg0: BigNumberish],
     [
       [string, bigint, bigint, boolean] & {
         stakeToken: string;
@@ -698,7 +666,6 @@ export interface Staking extends BaseContract {
     [
       [
         string,
-        string,
         bigint,
         bigint,
         bigint,
@@ -709,7 +676,6 @@ export interface Staking extends BaseContract {
         bigint,
         boolean
       ] & {
-        user: string;
         stakeToken: string;
         stakeAmount: bigint;
         interestRate: bigint;

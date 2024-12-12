@@ -1,14 +1,17 @@
 {
   "name": "hardhat-project",
   "scripts": {
-    "bsc": "npx hardhat run --network bsctest scripts/staking.ts"
+    "bsc": "npx hardhat run --network bsctest scripts/staking.ts",
+    "test": "npx hardhat test",
+    "coverage": "npx hardhat coverage"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",
     "@openzeppelin/hardhat-upgrades": "^3.0.2",
     "ethers": "^6.10.0",
-    "hardhat": "^2.19.4"
+    "hardhat": "^2.19.4",
+    "typescript": "^5.7.2"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.9.6",
