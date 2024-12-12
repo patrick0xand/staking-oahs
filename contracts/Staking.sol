@@ -24,7 +24,7 @@ contract Storage {
 
     struct Stake {
         address stakeToken;
-        uint256 convertRate; // amount of staked token to receive 1 reward token, 300 = 0.3 : 1 rewardToken = 0.3 stakedToken
+        uint256 convertRate; // amount of staked token to receive 1 reward token, 30000 = 0.3 : 1 rewardToken = 0.3 stakedToken
         uint256 lockTimePeriod; // time in seconds a user has to wait
         bool isActive;
     }
@@ -127,7 +127,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         }
         Stake memory stake = Stake({
             stakeToken: address(_token),
-            convertRate: 30000 * 100 * 365 / 10 * 1 days, // price of OAH / APR * 365
+            convertRate: 300000 * 100 * 365 / 10 * 1 days, // price of OAH / APR * 365
             lockTimePeriod: _lockTimePeriod,
             isActive: true
         });
