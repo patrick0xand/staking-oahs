@@ -71,7 +71,6 @@ contract Storage {
     // Values
     Stake[] public stakes;
     mapping(uint256 => mapping(address => UserStake)) public userStakes; // id => user => UserStake
-    mapping(address => mapping(uint256 => bool)) public userStakePids; // user => pid => true/false
     address public rewardToken;
 
     struct Stake {
@@ -261,7 +260,6 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         userStake.stakeAmount = toUint160(userStake.stakeAmount + _amount);
 
         userStake.withdrawTime = toUint48(block.timestamp + stake.lockTimePeriod);
-        userStakePids[msg.sender][_pid] = true;
         emit UserStaked(msg.sender, _pid, _amount);
     }
 
@@ -284,16 +282,18 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         emit UserWithdrew(msg.sender, _pid, _amount);
     }
 
-    function claim(uint256 _pid) external nonReentrant {
+    function claim() external nonReentrant {
+        require(rewardToken != address(0), "no reward token contract");
         for (uint256 i = 0; i < stakes.length; i++) {
-            // require(rewardToken != address(0), "no reward token contract");
-            if (rewardToken != address(0)) {
+            uint256 _pid = i;
+            UserStake storage userStake = userStakes[_pid][msg.sender];
+
+            // if not exists
+            if (userStake.startDate == 0) {
                 continue;
             }
 
-            UserStake storage userStake = userStakes[_pid][msg.sender];
             uint256 interestToWithdraw = getEarnedRewardTokens(_pid, msg.sender);
-
             // require(interestToWithdraw > 0, "no tokens to claim");
             if (interestToWithdraw > 0) {
                 continue;
