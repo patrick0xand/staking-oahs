@@ -10,6 +10,57 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
+library IterableMapping {
+    // Iterable mapping from address to uint;
+    struct Map {
+        address[] keys;
+        mapping(address => uint256) values;
+        mapping(address => uint256) indexOf;
+        mapping(address => bool) inserted;
+    }
+
+    function get(Map storage map, address key) public view returns (uint256) {
+        return map.values[key];
+    }
+
+    function getKeyAtIndex(Map storage map, uint256 index) public view returns (address) {
+        return map.keys[index];
+    }
+
+    function size(Map storage map) public view returns (uint256) {
+        return map.keys.length;
+    }
+
+    function set(Map storage map, address key, uint256 val) public {
+        if (map.inserted[key]) {
+            map.values[key] = val;
+        } else {
+            map.inserted[key] = true;
+            map.values[key] = val;
+            map.indexOf[key] = map.keys.length;
+            map.keys.push(key);
+        }
+    }
+
+    function remove(Map storage map, address key) public {
+        if (!map.inserted[key]) {
+            return;
+        }
+
+        delete map.inserted[key];
+        delete map.values[key];
+
+        uint256 index = map.indexOf[key];
+        address lastKey = map.keys[map.keys.length - 1];
+
+        map.indexOf[lastKey] = index;
+        delete map.indexOf[key];
+
+        map.keys[index] = lastKey;
+        map.keys.pop();
+    }
+}
+
 contract Storage {
     // Errors
     string internal ERR_STAKE_NOT_ACTIVE;
@@ -20,6 +71,7 @@ contract Storage {
     // Values
     Stake[] public stakes;
     mapping(uint256 => mapping(address => UserStake)) public userStakes; // id => user => UserStake
+    mapping(address => mapping(uint256 => bool)) public userStakePids; // user => pid => true/false
     address public rewardToken;
 
     struct Stake {
@@ -209,6 +261,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         userStake.stakeAmount = toUint160(userStake.stakeAmount + _amount);
 
         userStake.withdrawTime = toUint48(block.timestamp + stake.lockTimePeriod);
+        userStakePids[msg.sender][_pid] = true;
         emit UserStaked(msg.sender, _pid, _amount);
     }
 
@@ -232,18 +285,28 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     }
 
     function claim(uint256 _pid) external nonReentrant {
-        require(rewardToken != address(0), "no reward token contract");
-        UserStake storage userStake = userStakes[_pid][msg.sender];
+        for (uint256 i = 0; i < stakes.length; i++) {
+            // require(rewardToken != address(0), "no reward token contract");
+            if (rewardToken != address(0)) {
+                continue;
+            }
 
-        uint256 interestToWithdraw = getEarnedRewardTokens(_pid, msg.sender);
-        require(interestToWithdraw > 0, "no tokens to claim");
-        userStake.accumulatedRewards = 0;
-        userStake.startDate = toUint48(block.timestamp); // will reset userClaimableRewards to 0
+            UserStake storage userStake = userStakes[_pid][msg.sender];
+            uint256 interestToWithdraw = getEarnedRewardTokens(_pid, msg.sender);
 
-        // Transfer
-        IERC20Upgradeable oahToken = IERC20Upgradeable(rewardToken);
-        oahToken.safeTransfer(msg.sender, interestToWithdraw);
-        emit UserClaimed(_pid, msg.sender, rewardToken, interestToWithdraw);
+            // require(interestToWithdraw > 0, "no tokens to claim");
+            if (interestToWithdraw > 0) {
+                continue;
+            }
+
+            userStake.accumulatedRewards = 0;
+            userStake.startDate = toUint48(block.timestamp); // will reset userClaimableRewards to 0
+
+            // Transfer
+            IERC20Upgradeable oahToken = IERC20Upgradeable(rewardToken);
+            oahToken.safeTransfer(msg.sender, interestToWithdraw);
+            emit UserClaimed(_pid, msg.sender, rewardToken, interestToWithdraw);
+        }
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}

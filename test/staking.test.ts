@@ -301,7 +301,7 @@ describe("Staking", function () {
       await contract.connect(addr1).newStake(0, STAKE_AMOUNT);
 
       // Fast forward time by 2 days
-      await ethers.provider.send("evm_increaseTime", [STAKE_PERIOD]);
+      await ethers.provider.send("evm_increaseTime", [2 * 24 * 60 * 60]);
       await ethers.provider.send("evm_mine");
 
       // Stake tokens
@@ -312,10 +312,15 @@ describe("Staking", function () {
       await ethers.provider.send("evm_mine");
 
       // Calculate expected rewards
+      // const expectedRewards =
+      //   ((STAKE_AMOUNT + STAKE_AMOUNT_1) * BigInt(STAKE_PERIOD * APR)) /
+      //   (BigInt(3 * 100) * BigInt(365 * 24 * 60 * 60));
       const expectedRewards =
-        ((STAKE_AMOUNT + STAKE_AMOUNT_1) * BigInt(STAKE_PERIOD * APR)) /
-        (BigInt(3 * 100) * BigInt(365 * 24 * 60 * 60));
-
+        (STAKE_AMOUNT_1 * BigInt(STAKE_PERIOD * APR)) /
+          (BigInt(3 * 100) * BigInt(365 * 24 * 60 * 60)) +
+        (STAKE_AMOUNT * BigInt(9 * 24 * 60 * 60 * APR)) /
+          (BigInt(3 * 100) * BigInt(365 * 24 * 60 * 60));
+      // console.log("expectedRewards", expectedRewards);
       // Claim rewards
       await expect(contract.connect(addr1).claim(0))
         .to.emit(contract, "UserClaimed")
