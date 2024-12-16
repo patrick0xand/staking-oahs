@@ -30,6 +30,7 @@ export interface StorageInterface extends Interface {
 
   getEvent(
     nameOrSignatureOrTopic:
+      | "DevWithdraw"
       | "RewardTokenChanged"
       | "UserClaimed"
       | "UserStaked"
@@ -57,6 +58,19 @@ export interface StorageInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "userStakes", data: BytesLike): Result;
+}
+
+export namespace DevWithdrawEvent {
+  export type InputTuple = [token: AddressLike, amount: BigNumberish];
+  export type OutputTuple = [token: string, amount: bigint];
+  export interface OutputObject {
+    token: string;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
 }
 
 export namespace RewardTokenChangedEvent {
@@ -255,6 +269,13 @@ export interface Storage extends BaseContract {
   >;
 
   getEvent(
+    key: "DevWithdraw"
+  ): TypedContractEvent<
+    DevWithdrawEvent.InputTuple,
+    DevWithdrawEvent.OutputTuple,
+    DevWithdrawEvent.OutputObject
+  >;
+  getEvent(
     key: "RewardTokenChanged"
   ): TypedContractEvent<
     RewardTokenChangedEvent.InputTuple,
@@ -284,6 +305,17 @@ export interface Storage extends BaseContract {
   >;
 
   filters: {
+    "DevWithdraw(address,uint256)": TypedContractEvent<
+      DevWithdrawEvent.InputTuple,
+      DevWithdrawEvent.OutputTuple,
+      DevWithdrawEvent.OutputObject
+    >;
+    DevWithdraw: TypedContractEvent<
+      DevWithdrawEvent.InputTuple,
+      DevWithdrawEvent.OutputTuple,
+      DevWithdrawEvent.OutputObject
+    >;
+
     "RewardTokenChanged(address,uint256,address)": TypedContractEvent<
       RewardTokenChangedEvent.InputTuple,
       RewardTokenChangedEvent.OutputTuple,

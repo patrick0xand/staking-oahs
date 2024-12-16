@@ -28,6 +28,7 @@ export interface StakingInterface extends Interface {
     nameOrSignature:
       | "MAX_TIME"
       | "claim"
+      | "emergencyTokenRetrieve"
       | "getEarnedRewardTokens"
       | "getRewardTokenBalance"
       | "getUnlockTime"
@@ -59,6 +60,7 @@ export interface StakingInterface extends Interface {
     nameOrSignatureOrTopic:
       | "AdminChanged"
       | "BeaconUpgraded"
+      | "DevWithdraw"
       | "Initialized"
       | "OwnershipTransferred"
       | "Paused"
@@ -72,6 +74,10 @@ export interface StakingInterface extends Interface {
 
   encodeFunctionData(functionFragment: "MAX_TIME", values?: undefined): string;
   encodeFunctionData(functionFragment: "claim", values: [BigNumberish]): string;
+  encodeFunctionData(
+    functionFragment: "emergencyTokenRetrieve",
+    values: [AddressLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "getEarnedRewardTokens",
     values: [BigNumberish, AddressLike]
@@ -164,6 +170,10 @@ export interface StakingInterface extends Interface {
   decodeFunctionResult(functionFragment: "MAX_TIME", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "claim", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "emergencyTokenRetrieve",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getEarnedRewardTokens",
     data: BytesLike
   ): Result;
@@ -244,6 +254,19 @@ export namespace BeaconUpgradedEvent {
   export type OutputTuple = [beacon: string];
   export interface OutputObject {
     beacon: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace DevWithdrawEvent {
+  export type InputTuple = [token: AddressLike, amount: BigNumberish];
+  export type OutputTuple = [token: string, amount: bigint];
+  export interface OutputObject {
+    token: string;
+    amount: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -442,6 +465,12 @@ export interface Staking extends BaseContract {
 
   claim: TypedContractMethod<[_pid: BigNumberish], [void], "nonpayable">;
 
+  emergencyTokenRetrieve: TypedContractMethod<
+    [token: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
   getEarnedRewardTokens: TypedContractMethod<
     [_pid: BigNumberish, _staker: AddressLike],
     [bigint],
@@ -580,6 +609,9 @@ export interface Staking extends BaseContract {
   getFunction(
     nameOrSignature: "claim"
   ): TypedContractMethod<[_pid: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "emergencyTokenRetrieve"
+  ): TypedContractMethod<[token: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "getEarnedRewardTokens"
   ): TypedContractMethod<
@@ -741,6 +773,13 @@ export interface Staking extends BaseContract {
     BeaconUpgradedEvent.OutputObject
   >;
   getEvent(
+    key: "DevWithdraw"
+  ): TypedContractEvent<
+    DevWithdrawEvent.InputTuple,
+    DevWithdrawEvent.OutputTuple,
+    DevWithdrawEvent.OutputObject
+  >;
+  getEvent(
     key: "Initialized"
   ): TypedContractEvent<
     InitializedEvent.InputTuple,
@@ -825,6 +864,17 @@ export interface Staking extends BaseContract {
       BeaconUpgradedEvent.InputTuple,
       BeaconUpgradedEvent.OutputTuple,
       BeaconUpgradedEvent.OutputObject
+    >;
+
+    "DevWithdraw(address,uint256)": TypedContractEvent<
+      DevWithdrawEvent.InputTuple,
+      DevWithdrawEvent.OutputTuple,
+      DevWithdrawEvent.OutputObject
+    >;
+    DevWithdraw: TypedContractEvent<
+      DevWithdrawEvent.InputTuple,
+      DevWithdrawEvent.OutputTuple,
+      DevWithdrawEvent.OutputObject
     >;
 
     "Initialized(uint8)": TypedContractEvent<

@@ -49,6 +49,7 @@ contract Storage {
     event UserClaimed(uint256 id, address indexed wallet, address indexed rewardToken, uint256 claimedAmount);
 
     event RewardTokenChanged(address indexed oldRewardToken, uint256 returnedAmount, address indexed newRewardToken);
+    event DevWithdraw(address token, uint amount);
 
     uint48 public constant MAX_TIME = type(uint48).max; // = 2^48 - 1
 }
@@ -116,6 +117,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     // Config functions. Can only be called by the owner.
     function setStakes(Period _period, IERC20Upgradeable _token) external onlyOwner {
         uint256 _lockTimePeriod;
+        uint256 _interestRate = 10;
         if (_period == Period.Days_7) {
             _lockTimePeriod = 7 days;
         } else if (_period == Period.Days_60) {
@@ -127,7 +129,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         }
         Stake memory stake = Stake({
             stakeToken: address(_token),
-            convertRate: 300000 * 100 * 365 / 10 * 1 days, // price of OAH / APR * 365
+            convertRate: 300000 * 100 * 365 * 1 days / _interestRate, // price of OAH / APR * 365
             lockTimePeriod: _lockTimePeriod,
             isActive: true
         });
@@ -244,6 +246,22 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         IERC20Upgradeable oahToken = IERC20Upgradeable(rewardToken);
         oahToken.safeTransfer(msg.sender, interestToWithdraw);
         emit UserClaimed(_pid, msg.sender, rewardToken, interestToWithdraw);
+    }
+
+    function emergencyTokenRetrieve(address token) external onlyOwner {
+        uint i;
+        for (i = 0; i < stakes.length; i++) {
+            require(token != address(stakes[i].stakeToken), "Cannot withdraw LP tokens");
+        }
+
+        uint balance = IERC20Upgradeable(token).balanceOf(address(this));
+
+        IERC20Upgradeable(token).safeTransfer(
+            _msgSender(),
+            balance
+        );
+
+        emit DevWithdraw(address(token), balance);
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
