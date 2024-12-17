@@ -3,7 +3,8 @@
   "scripts": {
     "bsc": "npx hardhat run --network bsctest scripts/staking.ts",
     "test": "npx hardhat test",
-    "coverage": "npx hardhat coverage"
+    "coverage": "npx hardhat coverage",
+    "gas-report": "REPORT_GAS=true npx hardhat test"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.5",

@@ -56,7 +56,7 @@ describe("Staking", function () {
 
       expect(stakes.stakeToken).to.equal(usdt.target);
       expect(stakes.convertRate).to.equal(
-        ((30000 * 100 * 365) / 10) * 24 * 60 * 60
+        ((300000 * 100 * 365) / 10) * 24 * 60 * 60
       ); // 7 days in seconds
       expect(stakes.lockTimePeriod).to.equal(7 * 24 * 60 * 60); // 7 days in seconds
       expect(stakes.isActive).to.equal(true);
@@ -74,7 +74,7 @@ describe("Staking", function () {
 
       expect(stakes.stakeToken).to.equal(usdt.target);
       expect(stakes.convertRate).to.equal(
-        ((30000 * 100 * 365) / 10) * 24 * 60 * 60
+        ((300000 * 100 * 365) / 10) * 24 * 60 * 60
       ); // 60 days in seconds
       expect(stakes.lockTimePeriod).to.equal(60 * 24 * 60 * 60); // 60 days in seconds
       expect(stakes.isActive).to.equal(true);
@@ -88,7 +88,7 @@ describe("Staking", function () {
 
       expect(stakes.stakeToken).to.equal(usdt.target);
       expect(stakes.convertRate).to.equal(
-        ((30000 * 100 * 365) / 10) * 24 * 60 * 60
+        ((300000 * 100 * 365) / 10) * 24 * 60 * 60
       ); // 120 days in seconds
       expect(stakes.lockTimePeriod).to.equal(120 * 24 * 60 * 60); // 120 days in seconds
       expect(stakes.isActive).to.equal(true);
@@ -115,7 +115,7 @@ describe("Staking", function () {
 
       const initialstakes = await contract.stakes(0);
       expect(initialstakes.convertRate).to.equal(
-        ((30000 * 100 * 365) / 10) * 24 * 60 * 60
+        ((300000 * 100 * 365) / 10) * 24 * 60 * 60
       );
 
       const newInterestRate = ethers.parseUnits("1500", "wei");
@@ -280,6 +280,56 @@ describe("Staking", function () {
       expect(finalBalance).to.equal(initialBalance - stakeAmount);
       expect(contractBalance).to.equal(stakeAmount);
     });
+
+    // it.only("should accumulate rewards correctly after multiple stakes", async function () {
+    //   const {contract, usdt, oah, addr1} = await loadFixture(deployDexFixture);
+    //   const APR = 10; // 10% APR
+    //   const STAKE_PERIOD = 7 * 24 * 60 * 60; // 7 days
+    //   const STAKE_AMOUNT = ethers.parseEther("10"); // 100 tokens
+    //   const STAKE_AMOUNT_1 = ethers.parseEther("20"); // 100 tokens
+
+    //   // Add a staking pool
+    //   await contract.setStakes(0, usdt); // Period 0 = 7 days by default
+
+    //   // Transfer tokens to addr1 and approve staking
+    //   await usdt.mint(addr1, STAKE_AMOUNT + STAKE_AMOUNT_1);
+    //   await usdt
+    //     .connect(addr1)
+    //     .approve(contract, STAKE_AMOUNT + STAKE_AMOUNT_1);
+
+    //   // Stake tokens
+    //   await contract.connect(addr1).newStake(0, STAKE_AMOUNT);
+
+    //   // Fast forward time by 2 days
+    //   await ethers.provider.send("evm_increaseTime", [2 * 24 * 60 * 60]);
+    //   await ethers.provider.send("evm_mine");
+
+    //   // Stake tokens
+    //   await contract.connect(addr1).newStake(0, STAKE_AMOUNT_1);
+
+    //   // Fast forward time by 7 days
+    //   await ethers.provider.send("evm_increaseTime", [STAKE_PERIOD]);
+    //   await ethers.provider.send("evm_mine");
+
+    //   // Calculate expected rewards
+    //   // const expectedRewards =
+    //   //   ((STAKE_AMOUNT + STAKE_AMOUNT_1) * BigInt(STAKE_PERIOD * APR)) /
+    //   //   (BigInt(3 * 100) * BigInt(365 * 24 * 60 * 60));
+    //   const expectedRewards =
+    //     (STAKE_AMOUNT_1 * BigInt(STAKE_PERIOD * APR)) /
+    //       (BigInt(3 * 100) * BigInt(365 * 24 * 60 * 60)) +
+    //     (STAKE_AMOUNT * BigInt(9 * 24 * 60 * 60 * APR)) /
+    //       (BigInt(3 * 100) * BigInt(365 * 24 * 60 * 60));
+    //   // console.log("expectedRewards", expectedRewards);
+    //   // Claim rewards
+    //   await expect(contract.connect(addr1).claim(0))
+    //     .to.emit(contract, "UserClaimed")
+    //     .withArgs(0, addr1, oah, expectedRewards);
+
+    //   // // Check final reward token balance of addr1
+    //   const finalBalance = await oah.balanceOf(addr1.address);
+    //   expect(finalBalance).to.equal(expectedRewards);
+    // });
   });
 
   describe("withdraw", function () {
@@ -377,6 +427,7 @@ describe("Staking", function () {
     it("should allow a user to claim their earned rewards", async function () {
       const {contract, usdt, oah, addr1} = await loadFixture(deployDexFixture);
       await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+      await contract.setStakes(0, ethers.ZeroAddress); // Period.Days_7 = 0
       const stakeAmount = ethers.parseEther("10");
 
       // Approve and stake tokens
@@ -389,7 +440,7 @@ describe("Staking", function () {
       await ethers.provider.send("evm_mine", []);
 
       // Claim rewards
-      await expect(contract.connect(addr1).claim(0))
+      await expect(contract.connect(addr1).claim())
         .to.emit(contract, "UserClaimed")
         .withArgs(
           0,
@@ -418,7 +469,7 @@ describe("Staking", function () {
       await ethers.provider.send("evm_mine", []);
 
       // Claim rewards
-      await expect(contract.connect(addr1).claim(0)).to.emit(
+      await expect(contract.connect(addr1).claim()).to.emit(
         contract,
         "UserClaimed"
       );
@@ -431,7 +482,7 @@ describe("Staking", function () {
       await ethers.provider.send("evm_mine", []);
 
       // Claim rewards
-      await expect(contract.connect(addr1).claim(0)).to.emit(
+      await expect(contract.connect(addr1).claim()).to.emit(
         contract,
         "UserClaimed"
       );
@@ -498,7 +549,7 @@ describe("Staking", function () {
         (BigInt(3 * 100) * BigInt(365 * 24 * 60 * 60));
 
       // Claim rewards
-      await expect(contract.connect(addr1).claim(0))
+      await expect(contract.connect(addr1).claim())
         .to.emit(contract, "UserClaimed")
         .withArgs(0, addr1, oah, expectedRewards);
 

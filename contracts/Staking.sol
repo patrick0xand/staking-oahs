@@ -233,19 +233,31 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         emit UserWithdrew(msg.sender, _pid, _amount);
     }
 
-    function claim(uint256 _pid) external nonReentrant {
+    function claim() external nonReentrant {
         require(rewardToken != address(0), "no reward token contract");
-        UserStake storage userStake = userStakes[_pid][msg.sender];
+        for (uint256 i = 0; i < stakes.length; i++) {
+            uint256 _pid = i;
+            UserStake storage userStake = userStakes[_pid][msg.sender];
 
-        uint256 interestToWithdraw = getEarnedRewardTokens(_pid, msg.sender);
-        require(interestToWithdraw > 0, "no tokens to claim");
-        userStake.accumulatedRewards = 0;
-        userStake.startDate = toUint48(block.timestamp); // will reset userClaimableRewards to 0
+            // if not exists
+            if (userStake.startDate == 0) {
+                continue;
+            }
 
-        // Transfer
-        IERC20Upgradeable oahToken = IERC20Upgradeable(rewardToken);
-        oahToken.safeTransfer(msg.sender, interestToWithdraw);
-        emit UserClaimed(_pid, msg.sender, rewardToken, interestToWithdraw);
+            uint256 interestToWithdraw = getEarnedRewardTokens(_pid, msg.sender);
+            // require(interestToWithdraw > 0, "no tokens to claim");
+            if (interestToWithdraw == 0) {
+                continue;
+            }
+
+            userStake.accumulatedRewards = 0;
+            userStake.startDate = toUint48(block.timestamp); // will reset userClaimableRewards to 0
+
+            // Transfer
+            IERC20Upgradeable oahToken = IERC20Upgradeable(rewardToken);
+            oahToken.safeTransfer(msg.sender, interestToWithdraw);
+            emit UserClaimed(_pid, msg.sender, rewardToken, interestToWithdraw);
+        }
     }
 
     function emergencyTokenRetrieve(address token) external onlyOwner {

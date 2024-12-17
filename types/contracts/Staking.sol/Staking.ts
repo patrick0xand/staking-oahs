@@ -73,7 +73,7 @@ export interface StakingInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(functionFragment: "MAX_TIME", values?: undefined): string;
-  encodeFunctionData(functionFragment: "claim", values: [BigNumberish]): string;
+  encodeFunctionData(functionFragment: "claim", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "emergencyTokenRetrieve",
     values: [AddressLike]
@@ -463,7 +463,7 @@ export interface Staking extends BaseContract {
 
   MAX_TIME: TypedContractMethod<[], [bigint], "view">;
 
-  claim: TypedContractMethod<[_pid: BigNumberish], [void], "nonpayable">;
+  claim: TypedContractMethod<[], [void], "nonpayable">;
 
   emergencyTokenRetrieve: TypedContractMethod<
     [token: AddressLike],
@@ -608,7 +608,7 @@ export interface Staking extends BaseContract {
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "claim"
-  ): TypedContractMethod<[_pid: BigNumberish], [void], "nonpayable">;
+  ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "emergencyTokenRetrieve"
   ): TypedContractMethod<[token: AddressLike], [void], "nonpayable">;
