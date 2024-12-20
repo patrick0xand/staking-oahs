@@ -193,7 +193,6 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         for (uint256 _pid = 0; _pid < stakes.length; _pid++) {
             Stake memory stake = stakes[_pid];
             if (stake.convertRate == 0) {
-                totalReward += 0;
                 continue;
             }
             totalReward += userTotalRewards(_pid, _staker) * BASE_CONVERT / stake.convertRate; // safe
