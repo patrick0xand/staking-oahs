@@ -49,7 +49,7 @@ contract Storage {
     event UserClaimed(uint256 id, address indexed wallet, address indexed rewardToken, uint256 claimedAmount);
 
     event RewardTokenChanged(address indexed oldRewardToken, uint256 returnedAmount, address indexed newRewardToken);
-    event DevWithdraw(address token, uint amount);
+    event DevWithdraw(address token, uint256 amount);
 
     uint48 public constant MAX_TIME = type(uint48).max; // = 2^48 - 1
 }
@@ -170,7 +170,11 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         return userClaimableRewards(_pid, _staker) + userStakes[_pid][_staker].accumulatedRewards;
     }
 
-    function getEarnedRewardTokens(uint256 _pid, address _staker) public view returns (uint256 claimableRewardTokens) {
+    function getEarnedRewardTokensByPid(uint256 _pid, address _staker)
+        public
+        view
+        returns (uint256 claimableRewardTokens)
+    {
         Stake storage stake = stakes[_pid];
 
         if (address(rewardToken) == address(0) || stake.convertRate == 0) {
@@ -178,6 +182,24 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         } else {
             return userTotalRewards(_pid, _staker) * BASE_CONVERT / stake.convertRate; // safe
         }
+    }
+
+    function getEarnedRewardTokens(address _staker) public view returns (uint256 claimableRewardTokens) {
+        if (address(rewardToken) == address(0)) {
+            return 0;
+        }
+        uint256 totalReward = 0;
+
+        for (uint256 _pid = 0; _pid < stakes.length; _pid++) {
+            Stake memory stake = stakes[_pid];
+            if (stake.convertRate == 0) {
+                totalReward += 0;
+                continue;
+            }
+            totalReward += userTotalRewards(_pid, _staker) * BASE_CONVERT / stake.convertRate; // safe
+        }
+
+        return totalReward;
     }
 
     // User functions
@@ -244,7 +266,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
                 continue;
             }
 
-            uint256 interestToWithdraw = getEarnedRewardTokens(_pid, msg.sender);
+            uint256 interestToWithdraw = getEarnedRewardTokensByPid(_pid, msg.sender);
             // require(interestToWithdraw > 0, "no tokens to claim");
             if (interestToWithdraw == 0) {
                 continue;
@@ -261,17 +283,14 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     }
 
     function emergencyTokenRetrieve(address token) external onlyOwner {
-        uint i;
+        uint256 i;
         for (i = 0; i < stakes.length; i++) {
             require(token != address(stakes[i].stakeToken), "Cannot withdraw LP tokens");
         }
 
-        uint balance = IERC20Upgradeable(token).balanceOf(address(this));
+        uint256 balance = IERC20Upgradeable(token).balanceOf(address(this));
 
-        IERC20Upgradeable(token).safeTransfer(
-            _msgSender(),
-            balance
-        );
+        IERC20Upgradeable(token).safeTransfer(_msgSender(), balance);
 
         emit DevWithdraw(address(token), balance);
     }

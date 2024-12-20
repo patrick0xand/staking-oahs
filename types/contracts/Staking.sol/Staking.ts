@@ -30,6 +30,7 @@ export interface StakingInterface extends Interface {
       | "claim"
       | "emergencyTokenRetrieve"
       | "getEarnedRewardTokens"
+      | "getEarnedRewardTokensByPid"
       | "getRewardTokenBalance"
       | "getUnlockTime"
       | "initialize"
@@ -80,6 +81,10 @@ export interface StakingInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "getEarnedRewardTokens",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getEarnedRewardTokensByPid",
     values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
@@ -175,6 +180,10 @@ export interface StakingInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "getEarnedRewardTokens",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getEarnedRewardTokensByPid",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -472,6 +481,12 @@ export interface Staking extends BaseContract {
   >;
 
   getEarnedRewardTokens: TypedContractMethod<
+    [_staker: AddressLike],
+    [bigint],
+    "view"
+  >;
+
+  getEarnedRewardTokensByPid: TypedContractMethod<
     [_pid: BigNumberish, _staker: AddressLike],
     [bigint],
     "view"
@@ -614,6 +629,9 @@ export interface Staking extends BaseContract {
   ): TypedContractMethod<[token: AddressLike], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "getEarnedRewardTokens"
+  ): TypedContractMethod<[_staker: AddressLike], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getEarnedRewardTokensByPid"
   ): TypedContractMethod<
     [_pid: BigNumberish, _staker: AddressLike],
     [bigint],

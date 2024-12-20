@@ -446,7 +446,7 @@ describe("Staking", function () {
           0,
           addr1,
           oah,
-          await contract.getEarnedRewardTokens(0, addr1.address)
+          await contract.getEarnedRewardTokensByPid(0, addr1.address)
         );
 
       // Check user's reward token balance
@@ -520,7 +520,7 @@ describe("Staking", function () {
       await contract.set(0, 0);
 
       const updatedstakes = await contract.stakes(0);
-      expect(await contract.getEarnedRewardTokens(0, addr1)).to.equal(0);
+      expect(await contract.getEarnedRewardTokensByPid(0, addr1)).to.equal(0);
     });
 
     it("should correctly calculate rewards after the staking period ends", async function () {
