@@ -117,13 +117,16 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     // Config functions. Can only be called by the owner.
     function setStakes(Period _period, IERC20Upgradeable _token) external onlyOwner {
         uint256 _lockTimePeriod;
-        uint256 _interestRate = 10;
+        uint256 _interestRate;
         if (_period == Period.Days_7) {
             _lockTimePeriod = 7 days;
+            _interestRate = 10;
         } else if (_period == Period.Days_60) {
             _lockTimePeriod = 60 days;
+            _interestRate = 15;
         } else if (_period == Period.Days_120) {
             _lockTimePeriod = 120 days;
+            _interestRate = 20;
         } else {
             revert("Owner: Cannot set to this period");
         }

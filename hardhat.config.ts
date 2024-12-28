@@ -6,6 +6,8 @@ import "@openzeppelin/hardhat-upgrades";
 const mnemonicOrPrivateKey = process.env.PRIVATE_KEY || "";
 const apiKey = process.env.API_KEY || "";
 
+const MAINNET_PRIVATE_KEY = !process.env.MAINNET_PRIVATE_KEY ? "0x" + "0".repeat(64) : process.env.MAINNET_PRIVATE_KEY;
+
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
@@ -38,6 +40,13 @@ const config: HardhatUserConfig = {
       chainId: 97,
       gasPrice: 200000000000,
       accounts: [mnemonicOrPrivateKey],
+    },
+    bscMain: {
+      url: "https://bsc-dataseed.binance.org/",
+      chainId: 56,
+      timeout: 600000,
+      gasPrice: 20000000000,
+      accounts: [MAINNET_PRIVATE_KEY],
     },
     mumbai: {
       url: "https://polygon-mumbai.g.alchemy.com/v2/XSBjWVWF6OwMEOJoRhfShq2s4K2VYMsH",
