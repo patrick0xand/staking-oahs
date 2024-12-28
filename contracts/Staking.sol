@@ -49,7 +49,7 @@ contract Storage {
     event UserClaimed(uint256 id, address indexed wallet, address indexed rewardToken, uint256 claimedAmount);
 
     event RewardTokenChanged(address indexed oldRewardToken, uint256 returnedAmount, address indexed newRewardToken);
-    event DevWithdraw(address token, uint amount);
+    event DevWithdraw(address token, uint256 amount);
 
     uint48 public constant MAX_TIME = type(uint48).max; // = 2^48 - 1
 }
@@ -138,6 +138,15 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
 
     function set(uint256 _pid, uint256 _convertRate) public onlyOwner {
         stakes[_pid].convertRate = _convertRate;
+    }
+
+    function sets(uint256[] calldata _pids, uint256[] calldata _convertRates) public onlyOwner {
+        require(_pids.length == _convertRates.length, "length mismatch");
+        for (uint256 i = 0; i < _pids.length; i++) {
+            uint256 _pid = _pids[i];
+            uint256 _convertRate = _convertRates[i];
+            stakes[_pid].convertRate = _convertRate;
+        }
     }
 
     function pause() public onlyOwner {
@@ -261,17 +270,14 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     }
 
     function emergencyTokenRetrieve(address token) external onlyOwner {
-        uint i;
+        uint256 i;
         for (i = 0; i < stakes.length; i++) {
             require(token != address(stakes[i].stakeToken), "Cannot withdraw LP tokens");
         }
 
-        uint balance = IERC20Upgradeable(token).balanceOf(address(this));
+        uint256 balance = IERC20Upgradeable(token).balanceOf(address(this));
 
-        IERC20Upgradeable(token).safeTransfer(
-            _msgSender(),
-            balance
-        );
+        IERC20Upgradeable(token).safeTransfer(_msgSender(), balance);
 
         emit DevWithdraw(address(token), balance);
     }
