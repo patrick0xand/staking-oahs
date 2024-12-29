@@ -286,11 +286,11 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
     }
 
     /**
-     * @notice Owner drains one type of tokens when the contract is paused
+     * @notice admin function to send one type of tokens to external address
      * @dev emergency use only
      * @param _amount drained token amount
      */
-    function drainToken(address _to, address _token, uint256 _amount) external whenPaused onlyOwner {
+    function drainToken(address _to, address _token, uint256 _amount) external onlyOwner {
         if (_token == address(0)) {
             payable(_to).transfer(_amount);
         } else {
