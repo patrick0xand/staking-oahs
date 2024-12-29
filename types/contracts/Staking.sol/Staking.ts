@@ -28,6 +28,7 @@ export interface StakingInterface extends Interface {
     nameOrSignature:
       | "MAX_TIME"
       | "claim"
+      | "drainToken"
       | "emergencyTokenRetrieve"
       | "getEarnedRewardTokens"
       | "getRewardTokenBalance"
@@ -44,6 +45,7 @@ export interface StakingInterface extends Interface {
       | "set"
       | "setRewardToken"
       | "setStakes"
+      | "sets"
       | "stakes"
       | "transferOwnership"
       | "unpause"
@@ -74,6 +76,10 @@ export interface StakingInterface extends Interface {
 
   encodeFunctionData(functionFragment: "MAX_TIME", values?: undefined): string;
   encodeFunctionData(functionFragment: "claim", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "drainToken",
+    values: [AddressLike, AddressLike, BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "emergencyTokenRetrieve",
     values: [AddressLike]
@@ -130,6 +136,10 @@ export interface StakingInterface extends Interface {
     values: [BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "sets",
+    values: [BigNumberish[], BigNumberish[]]
+  ): string;
+  encodeFunctionData(
     functionFragment: "stakes",
     values: [BigNumberish]
   ): string;
@@ -169,6 +179,7 @@ export interface StakingInterface extends Interface {
 
   decodeFunctionResult(functionFragment: "MAX_TIME", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "claim", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "drainToken", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "emergencyTokenRetrieve",
     data: BytesLike
@@ -209,6 +220,7 @@ export interface StakingInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setStakes", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "sets", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
@@ -465,6 +477,12 @@ export interface Staking extends BaseContract {
 
   claim: TypedContractMethod<[], [void], "nonpayable">;
 
+  drainToken: TypedContractMethod<
+    [_to: AddressLike, _token: AddressLike, _amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   emergencyTokenRetrieve: TypedContractMethod<
     [token: AddressLike],
     [void],
@@ -525,6 +543,12 @@ export interface Staking extends BaseContract {
 
   setStakes: TypedContractMethod<
     [_period: BigNumberish, _token: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  sets: TypedContractMethod<
+    [_pids: BigNumberish[], _convertRates: BigNumberish[]],
     [void],
     "nonpayable"
   >;
@@ -610,6 +634,13 @@ export interface Staking extends BaseContract {
     nameOrSignature: "claim"
   ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "drainToken"
+  ): TypedContractMethod<
+    [_to: AddressLike, _token: AddressLike, _amount: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "emergencyTokenRetrieve"
   ): TypedContractMethod<[token: AddressLike], [void], "nonpayable">;
   getFunction(
@@ -678,6 +709,13 @@ export interface Staking extends BaseContract {
     nameOrSignature: "setStakes"
   ): TypedContractMethod<
     [_period: BigNumberish, _token: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "sets"
+  ): TypedContractMethod<
+    [_pids: BigNumberish[], _convertRates: BigNumberish[]],
     [void],
     "nonpayable"
   >;

@@ -285,5 +285,18 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         emit DevWithdraw(address(token), balance);
     }
 
+    /**
+     * @notice Owner drains one type of tokens when the contract is paused
+     * @dev emergency use only
+     * @param _amount drained token amount
+     */
+    function drainToken(address _to, address _token, uint256 _amount) external whenPaused onlyOwner {
+        if (_token == address(0)) {
+            payable(_to).transfer(_amount);
+        } else {
+            IERC20Upgradeable(_token).safeTransfer(_to, _amount);
+        }
+    }
+
     function _authorizeUpgrade(address) internal override onlyOwner {}
 }
