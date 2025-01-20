@@ -60,14 +60,8 @@ contract Storage {
 
     // new variable for version 1.0
     uint8 internal _initializedVersion;
-    address internal ETH_ADDR;
-    address internal BNB_ADDR;
-    address internal USDT_ADDR;
-    uint256 public totalUsdtStaking;
-    uint256 public totalBnbStaking;
-    uint256 public totalEthStaking;
-    uint256 public totalOahStaking;
     uint256 public paidOahReward;
+    mapping(address => uint256) public totalStaking;
     mapping(bytes32 => Withdrawable) public withdrawables; // hash(_pid,user) => Withdrawable;
 }
 
@@ -94,12 +88,9 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         BASE_CONVERT = 100000;
     }
 
-    function initializeV1(address usdt, address eth) external {
+    function initializeV1() external {
         require(_getInitializedVersion() == 1 && _initializedVersion == 0);
         _initializedVersion = 1;
-        BNB_ADDR = address(0);
-        USDT_ADDR = usdt;
-        ETH_ADDR = eth;
     }
 
     // modifier
@@ -116,23 +107,11 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
 
     function updateTotalStakingByToken(address token, uint256 amount, bool isAdded) internal {
         if (isAdded) {
-            if (token == BNB_ADDR) {
-                totalBnbStaking += amount;
-            } else if (token == ETH_ADDR) {
-                totalEthStaking += amount;
-            } else if (token == USDT_ADDR) {
-                totalUsdtStaking += amount;
-            }
+            totalStaking[token] += amount;
             return;
         }
 
-        if (token == BNB_ADDR) {
-            totalBnbStaking -= amount;
-        } else if (token == ETH_ADDR) {
-            totalEthStaking -= amount;
-        } else if (token == USDT_ADDR) {
-            totalUsdtStaking -= amount;
-        }
+        totalStaking[token] -= amount;
     }
 
     function increaseWithdrawable(bytes32 id, uint256 withdrawAmount, uint256 maxWithdrawAmount) internal {
