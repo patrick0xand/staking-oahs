@@ -34,8 +34,10 @@ export interface StakingInterface extends Interface {
       | "getRewardTokenBalance"
       | "getUnlockTime"
       | "initialize"
+      | "initializeV1"
       | "newStake"
       | "owner"
+      | "paidOahReward"
       | "pause"
       | "paused"
       | "poolLength"
@@ -47,6 +49,10 @@ export interface StakingInterface extends Interface {
       | "setStakes"
       | "sets"
       | "stakes"
+      | "totalBnbStaking"
+      | "totalEthStaking"
+      | "totalOahStaking"
+      | "totalUsdtStaking"
       | "transferOwnership"
       | "unpause"
       | "upgradeTo"
@@ -56,6 +62,7 @@ export interface StakingInterface extends Interface {
       | "userStakes"
       | "userTotalRewards"
       | "withdraw"
+      | "withdrawables"
   ): FunctionFragment;
 
   getEvent(
@@ -101,10 +108,18 @@ export interface StakingInterface extends Interface {
     values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "initializeV1",
+    values: [AddressLike, AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "newStake",
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "paidOahReward",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
   encodeFunctionData(
@@ -144,6 +159,22 @@ export interface StakingInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "totalBnbStaking",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "totalEthStaking",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "totalOahStaking",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "totalUsdtStaking",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "transferOwnership",
     values: [AddressLike]
   ): string;
@@ -176,6 +207,10 @@ export interface StakingInterface extends Interface {
     functionFragment: "withdraw",
     values: [BigNumberish, BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "withdrawables",
+    values: [BytesLike]
+  ): string;
 
   decodeFunctionResult(functionFragment: "MAX_TIME", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "claim", data: BytesLike): Result;
@@ -197,8 +232,16 @@ export interface StakingInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "initializeV1",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "newStake", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "paidOahReward",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "poolLength", data: BytesLike): Result;
@@ -223,6 +266,22 @@ export interface StakingInterface extends Interface {
   decodeFunctionResult(functionFragment: "sets", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "totalBnbStaking",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "totalEthStaking",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "totalOahStaking",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "totalUsdtStaking",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
@@ -246,6 +305,10 @@ export interface StakingInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "withdrawables",
+    data: BytesLike
+  ): Result;
 }
 
 export namespace AdminChangedEvent {
@@ -509,6 +572,12 @@ export interface Staking extends BaseContract {
     "nonpayable"
   >;
 
+  initializeV1: TypedContractMethod<
+    [usdt: AddressLike, eth: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
   newStake: TypedContractMethod<
     [_pid: BigNumberish, _amount: BigNumberish],
     [void],
@@ -516,6 +585,8 @@ export interface Staking extends BaseContract {
   >;
 
   owner: TypedContractMethod<[], [string], "view">;
+
+  paidOahReward: TypedContractMethod<[], [bigint], "view">;
 
   pause: TypedContractMethod<[], [void], "nonpayable">;
 
@@ -565,6 +636,14 @@ export interface Staking extends BaseContract {
     ],
     "view"
   >;
+
+  totalBnbStaking: TypedContractMethod<[], [bigint], "view">;
+
+  totalEthStaking: TypedContractMethod<[], [bigint], "view">;
+
+  totalOahStaking: TypedContractMethod<[], [bigint], "view">;
+
+  totalUsdtStaking: TypedContractMethod<[], [bigint], "view">;
 
   transferOwnership: TypedContractMethod<
     [newOwner: AddressLike],
@@ -623,6 +702,12 @@ export interface Staking extends BaseContract {
     "nonpayable"
   >;
 
+  withdrawables: TypedContractMethod<
+    [arg0: BytesLike],
+    [[bigint, bigint] & { withdrawAmount: bigint; maxWithdrawAmount: bigint }],
+    "view"
+  >;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -668,6 +753,13 @@ export interface Staking extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "initializeV1"
+  ): TypedContractMethod<
+    [usdt: AddressLike, eth: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "newStake"
   ): TypedContractMethod<
     [_pid: BigNumberish, _amount: BigNumberish],
@@ -677,6 +769,9 @@ export interface Staking extends BaseContract {
   getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "paidOahReward"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "pause"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -733,6 +828,18 @@ export interface Staking extends BaseContract {
     ],
     "view"
   >;
+  getFunction(
+    nameOrSignature: "totalBnbStaking"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "totalEthStaking"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "totalOahStaking"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "totalUsdtStaking"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
@@ -794,6 +901,13 @@ export interface Staking extends BaseContract {
     [_pid: BigNumberish, _amount: BigNumberish],
     [void],
     "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "withdrawables"
+  ): TypedContractMethod<
+    [arg0: BytesLike],
+    [[bigint, bigint] & { withdrawAmount: bigint; maxWithdrawAmount: bigint }],
+    "view"
   >;
 
   getEvent(

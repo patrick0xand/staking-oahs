@@ -36,6 +36,11 @@ contract Storage {
         uint256 withdrawTime;
     }
 
+    struct Withdrawable {
+        uint256 withdrawAmount;
+        uint256 maxWithdrawAmount;
+    }
+
     // Enums
     enum Period {
         Days_7,
@@ -52,6 +57,18 @@ contract Storage {
     event DevWithdraw(address token, uint256 amount);
 
     uint48 public constant MAX_TIME = type(uint48).max; // = 2^48 - 1
+
+    // new variable for version 1.0
+    uint8 internal _initializedVersion;
+    address internal ETH_ADDR;
+    address internal BNB_ADDR;
+    address internal USDT_ADDR;
+    uint256 public totalUsdtStaking;
+    uint256 public totalBnbStaking;
+    uint256 public totalEthStaking;
+    uint256 public totalOahStaking;
+    uint256 public paidOahReward;
+    mapping(bytes32 => Withdrawable) public withdrawables; // hash(_pid,user) => Withdrawable;
 }
 
 contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable, Storage {
@@ -75,6 +92,57 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
 
         // init value
         BASE_CONVERT = 100000;
+    }
+
+    function initializeV1(address usdt, address eth) external {
+        require(_getInitializedVersion() == 1 && _initializedVersion == 0);
+        _initializedVersion = 1;
+        BNB_ADDR = address(0);
+        USDT_ADDR = usdt;
+        ETH_ADDR = eth;
+    }
+
+    // modifier
+    modifier onlyWithdrawable(bytes32 id) {
+        Withdrawable memory withdrawable = withdrawables[id];
+        require(withdrawable.withdrawAmount < withdrawable.maxWithdrawAmount);
+        _;
+    }
+
+    // Internal functions
+    function getUserStakeHashID(uint256 _pid, address _userAddr) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked(_pid, _userAddr));
+    }
+
+    function updateTotalStakingByToken(address token, uint256 amount, bool isAdded) internal {
+        if (isAdded) {
+            if (token == BNB_ADDR) {
+                totalBnbStaking += amount;
+            } else if (token == ETH_ADDR) {
+                totalEthStaking += amount;
+            } else if (token == USDT_ADDR) {
+                totalUsdtStaking += amount;
+            }
+            return;
+        }
+
+        if (token == BNB_ADDR) {
+            totalBnbStaking -= amount;
+        } else if (token == ETH_ADDR) {
+            totalEthStaking -= amount;
+        } else if (token == USDT_ADDR) {
+            totalUsdtStaking -= amount;
+        }
+    }
+
+    function increaseWithdrawable(bytes32 id, uint256 withdrawAmount, uint256 maxWithdrawAmount) internal {
+        Withdrawable storage withdrawable = withdrawables[id];
+        if (withdrawAmount != 0) {
+            withdrawable.withdrawAmount += withdrawAmount;
+        }
+        if (maxWithdrawAmount != 0) {
+            withdrawable.maxWithdrawAmount += maxWithdrawAmount * 70 / 100;
+        }
     }
 
     function poolLength() external view returns (uint256) {
@@ -132,7 +200,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         }
         Stake memory stake = Stake({
             stakeToken: address(_token),
-            convertRate: 300000 * 100 * 365 * 1 days / _interestRate, // price of OAH / APR * 365
+            convertRate: (300000 * 100 * 365 * 1 days) / _interestRate, // price of OAH / APR * 365
             lockTimePeriod: _lockTimePeriod,
             isActive: true
         });
@@ -188,7 +256,7 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         if (address(rewardToken) == address(0) || stake.convertRate == 0) {
             return 0;
         } else {
-            return userTotalRewards(_pid, _staker) * BASE_CONVERT / stake.convertRate; // safe
+            return (userTotalRewards(_pid, _staker) * BASE_CONVERT) / stake.convertRate; // safe
         }
     }
 
@@ -223,10 +291,18 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
         userStake.stakeAmount = toUint160(userStake.stakeAmount + _amount);
 
         userStake.withdrawTime = toUint48(block.timestamp + stake.lockTimePeriod);
+
+        increaseWithdrawable(getUserStakeHashID(_pid, msg.sender), 0, _amount);
+        updateTotalStakingByToken(stake.stakeToken, _amount, true);
+
         emit UserStaked(msg.sender, _pid, _amount);
     }
 
-    function withdraw(uint256 _pid, uint256 _amount) external nonReentrant {
+    function withdraw(uint256 _pid, uint256 _amount)
+        external
+        nonReentrant
+        onlyWithdrawable(getUserStakeHashID(_pid, msg.sender))
+    {
         require(_amount > 0, "amount to withdraw not > 0");
         require(block.timestamp > getUnlockTime(_pid, msg.sender), "staked tokens are still locked");
         Stake storage pool = stakes[_pid];
@@ -241,6 +317,9 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
             IERC20Upgradeable stakeToken = IERC20Upgradeable(pool.stakeToken);
             stakeToken.safeTransfer(msg.sender, _amount);
         }
+
+        increaseWithdrawable(getUserStakeHashID(_pid, msg.sender), _amount, 0);
+        updateTotalStakingByToken(pool.stakeToken, _amount, false);
 
         emit UserWithdrew(msg.sender, _pid, _amount);
     }
@@ -267,6 +346,8 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
 
             // Transfer
             IERC20Upgradeable oahToken = IERC20Upgradeable(rewardToken);
+            // update paidOahReward
+            paidOahReward += interestToWithdraw;
             oahToken.safeTransfer(msg.sender, interestToWithdraw);
             emit UserClaimed(_pid, msg.sender, rewardToken, interestToWithdraw);
         }
