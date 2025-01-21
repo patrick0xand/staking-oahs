@@ -60,7 +60,6 @@ contract Storage {
 
     // new variable for version 1.0
     uint8 internal _initializedVersion;
-    uint256 public paidOahReward;
     mapping(address => uint256) public totalStaking;
     mapping(bytes32 => Withdrawable) public withdrawables; // hash(_pid,user) => Withdrawable;
 }
@@ -325,8 +324,6 @@ contract Staking is OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable, Re
 
             // Transfer
             IERC20Upgradeable oahToken = IERC20Upgradeable(rewardToken);
-            // update paidOahReward
-            paidOahReward += interestToWithdraw;
             oahToken.safeTransfer(msg.sender, interestToWithdraw);
             emit UserClaimed(_pid, msg.sender, rewardToken, interestToWithdraw);
         }

@@ -27,13 +27,9 @@ export interface StorageInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "MAX_TIME"
-      | "paidOahReward"
       | "rewardToken"
       | "stakes"
-      | "totalBnbStaking"
-      | "totalEthStaking"
-      | "totalOahStaking"
-      | "totalUsdtStaking"
+      | "totalStaking"
       | "userStakes"
       | "withdrawables"
   ): FunctionFragment;
@@ -49,10 +45,6 @@ export interface StorageInterface extends Interface {
 
   encodeFunctionData(functionFragment: "MAX_TIME", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "paidOahReward",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "rewardToken",
     values?: undefined
   ): string;
@@ -61,20 +53,8 @@ export interface StorageInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "totalBnbStaking",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "totalEthStaking",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "totalOahStaking",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "totalUsdtStaking",
-    values?: undefined
+    functionFragment: "totalStaking",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "userStakes",
@@ -87,28 +67,12 @@ export interface StorageInterface extends Interface {
 
   decodeFunctionResult(functionFragment: "MAX_TIME", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "paidOahReward",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "rewardToken",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "totalBnbStaking",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "totalEthStaking",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "totalOahStaking",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "totalUsdtStaking",
+    functionFragment: "totalStaking",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "userStakes", data: BytesLike): Result;
@@ -259,8 +223,6 @@ export interface Storage extends BaseContract {
 
   MAX_TIME: TypedContractMethod<[], [bigint], "view">;
 
-  paidOahReward: TypedContractMethod<[], [bigint], "view">;
-
   rewardToken: TypedContractMethod<[], [string], "view">;
 
   stakes: TypedContractMethod<
@@ -276,13 +238,7 @@ export interface Storage extends BaseContract {
     "view"
   >;
 
-  totalBnbStaking: TypedContractMethod<[], [bigint], "view">;
-
-  totalEthStaking: TypedContractMethod<[], [bigint], "view">;
-
-  totalOahStaking: TypedContractMethod<[], [bigint], "view">;
-
-  totalUsdtStaking: TypedContractMethod<[], [bigint], "view">;
+  totalStaking: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
   userStakes: TypedContractMethod<
     [arg0: BigNumberish, arg1: AddressLike],
@@ -311,9 +267,6 @@ export interface Storage extends BaseContract {
     nameOrSignature: "MAX_TIME"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
-    nameOrSignature: "paidOahReward"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
     nameOrSignature: "rewardToken"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
@@ -331,17 +284,8 @@ export interface Storage extends BaseContract {
     "view"
   >;
   getFunction(
-    nameOrSignature: "totalBnbStaking"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "totalEthStaking"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "totalOahStaking"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "totalUsdtStaking"
-  ): TypedContractMethod<[], [bigint], "view">;
+    nameOrSignature: "totalStaking"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
   getFunction(
     nameOrSignature: "userStakes"
   ): TypedContractMethod<

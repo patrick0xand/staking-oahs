@@ -37,7 +37,6 @@ export interface StakingInterface extends Interface {
       | "initializeV1"
       | "newStake"
       | "owner"
-      | "paidOahReward"
       | "pause"
       | "paused"
       | "poolLength"
@@ -49,10 +48,7 @@ export interface StakingInterface extends Interface {
       | "setStakes"
       | "sets"
       | "stakes"
-      | "totalBnbStaking"
-      | "totalEthStaking"
-      | "totalOahStaking"
-      | "totalUsdtStaking"
+      | "totalStaking"
       | "transferOwnership"
       | "unpause"
       | "upgradeTo"
@@ -109,17 +105,13 @@ export interface StakingInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "initializeV1",
-    values: [AddressLike, AddressLike]
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "newStake",
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "paidOahReward",
-    values?: undefined
-  ): string;
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
   encodeFunctionData(
@@ -159,20 +151,8 @@ export interface StakingInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "totalBnbStaking",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "totalEthStaking",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "totalOahStaking",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "totalUsdtStaking",
-    values?: undefined
+    functionFragment: "totalStaking",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
@@ -238,10 +218,6 @@ export interface StakingInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "newStake", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "paidOahReward",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "poolLength", data: BytesLike): Result;
@@ -266,19 +242,7 @@ export interface StakingInterface extends Interface {
   decodeFunctionResult(functionFragment: "sets", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "totalBnbStaking",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "totalEthStaking",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "totalOahStaking",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "totalUsdtStaking",
+    functionFragment: "totalStaking",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -572,11 +536,7 @@ export interface Staking extends BaseContract {
     "nonpayable"
   >;
 
-  initializeV1: TypedContractMethod<
-    [usdt: AddressLike, eth: AddressLike],
-    [void],
-    "nonpayable"
-  >;
+  initializeV1: TypedContractMethod<[], [void], "nonpayable">;
 
   newStake: TypedContractMethod<
     [_pid: BigNumberish, _amount: BigNumberish],
@@ -585,8 +545,6 @@ export interface Staking extends BaseContract {
   >;
 
   owner: TypedContractMethod<[], [string], "view">;
-
-  paidOahReward: TypedContractMethod<[], [bigint], "view">;
 
   pause: TypedContractMethod<[], [void], "nonpayable">;
 
@@ -637,13 +595,7 @@ export interface Staking extends BaseContract {
     "view"
   >;
 
-  totalBnbStaking: TypedContractMethod<[], [bigint], "view">;
-
-  totalEthStaking: TypedContractMethod<[], [bigint], "view">;
-
-  totalOahStaking: TypedContractMethod<[], [bigint], "view">;
-
-  totalUsdtStaking: TypedContractMethod<[], [bigint], "view">;
+  totalStaking: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
   transferOwnership: TypedContractMethod<
     [newOwner: AddressLike],
@@ -754,11 +706,7 @@ export interface Staking extends BaseContract {
   >;
   getFunction(
     nameOrSignature: "initializeV1"
-  ): TypedContractMethod<
-    [usdt: AddressLike, eth: AddressLike],
-    [void],
-    "nonpayable"
-  >;
+  ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "newStake"
   ): TypedContractMethod<
@@ -769,9 +717,6 @@ export interface Staking extends BaseContract {
   getFunction(
     nameOrSignature: "owner"
   ): TypedContractMethod<[], [string], "view">;
-  getFunction(
-    nameOrSignature: "paidOahReward"
-  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "pause"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -829,17 +774,8 @@ export interface Staking extends BaseContract {
     "view"
   >;
   getFunction(
-    nameOrSignature: "totalBnbStaking"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "totalEthStaking"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "totalOahStaking"
-  ): TypedContractMethod<[], [bigint], "view">;
-  getFunction(
-    nameOrSignature: "totalUsdtStaking"
-  ): TypedContractMethod<[], [bigint], "view">;
+    nameOrSignature: "totalStaking"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
   getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
