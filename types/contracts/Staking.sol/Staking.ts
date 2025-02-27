@@ -34,6 +34,7 @@ export interface StakingInterface extends Interface {
       | "getRewardTokenBalance"
       | "getUnlockTime"
       | "initialize"
+      | "initializeV1"
       | "newStake"
       | "owner"
       | "pause"
@@ -47,6 +48,7 @@ export interface StakingInterface extends Interface {
       | "setStakes"
       | "sets"
       | "stakes"
+      | "totalStaking"
       | "transferOwnership"
       | "unpause"
       | "upgradeTo"
@@ -56,6 +58,7 @@ export interface StakingInterface extends Interface {
       | "userStakes"
       | "userTotalRewards"
       | "withdraw"
+      | "withdrawables"
   ): FunctionFragment;
 
   getEvent(
@@ -101,6 +104,10 @@ export interface StakingInterface extends Interface {
     values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "initializeV1",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "newStake",
     values: [BigNumberish, BigNumberish]
   ): string;
@@ -144,6 +151,10 @@ export interface StakingInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "totalStaking",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "transferOwnership",
     values: [AddressLike]
   ): string;
@@ -176,6 +187,10 @@ export interface StakingInterface extends Interface {
     functionFragment: "withdraw",
     values: [BigNumberish, BigNumberish]
   ): string;
+  encodeFunctionData(
+    functionFragment: "withdrawables",
+    values: [BytesLike]
+  ): string;
 
   decodeFunctionResult(functionFragment: "MAX_TIME", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "claim", data: BytesLike): Result;
@@ -197,6 +212,10 @@ export interface StakingInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "initializeV1",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "newStake", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
@@ -223,6 +242,10 @@ export interface StakingInterface extends Interface {
   decodeFunctionResult(functionFragment: "sets", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "totalStaking",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
@@ -246,6 +269,10 @@ export interface StakingInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "withdrawables",
+    data: BytesLike
+  ): Result;
 }
 
 export namespace AdminChangedEvent {
@@ -509,6 +536,8 @@ export interface Staking extends BaseContract {
     "nonpayable"
   >;
 
+  initializeV1: TypedContractMethod<[], [void], "nonpayable">;
+
   newStake: TypedContractMethod<
     [_pid: BigNumberish, _amount: BigNumberish],
     [void],
@@ -565,6 +594,8 @@ export interface Staking extends BaseContract {
     ],
     "view"
   >;
+
+  totalStaking: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
 
   transferOwnership: TypedContractMethod<
     [newOwner: AddressLike],
@@ -623,6 +654,12 @@ export interface Staking extends BaseContract {
     "nonpayable"
   >;
 
+  withdrawables: TypedContractMethod<
+    [arg0: BytesLike],
+    [[bigint, bigint] & { withdrawAmount: bigint; maxWithdrawAmount: bigint }],
+    "view"
+  >;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
@@ -667,6 +704,9 @@ export interface Staking extends BaseContract {
     [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "initializeV1"
+  ): TypedContractMethod<[], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "newStake"
   ): TypedContractMethod<
@@ -734,6 +774,9 @@ export interface Staking extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "totalStaking"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+  getFunction(
     nameOrSignature: "transferOwnership"
   ): TypedContractMethod<[newOwner: AddressLike], [void], "nonpayable">;
   getFunction(
@@ -794,6 +837,13 @@ export interface Staking extends BaseContract {
     [_pid: BigNumberish, _amount: BigNumberish],
     [void],
     "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "withdrawables"
+  ): TypedContractMethod<
+    [arg0: BytesLike],
+    [[bigint, bigint] & { withdrawAmount: bigint; maxWithdrawAmount: bigint }],
+    "view"
   >;
 
   getEvent(

@@ -25,7 +25,13 @@ import type {
 
 export interface StorageInterface extends Interface {
   getFunction(
-    nameOrSignature: "MAX_TIME" | "rewardToken" | "stakes" | "userStakes"
+    nameOrSignature:
+      | "MAX_TIME"
+      | "rewardToken"
+      | "stakes"
+      | "totalStaking"
+      | "userStakes"
+      | "withdrawables"
   ): FunctionFragment;
 
   getEvent(
@@ -47,8 +53,16 @@ export interface StorageInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "totalStaking",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "userStakes",
     values: [BigNumberish, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "withdrawables",
+    values: [BytesLike]
   ): string;
 
   decodeFunctionResult(functionFragment: "MAX_TIME", data: BytesLike): Result;
@@ -57,7 +71,15 @@ export interface StorageInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "stakes", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "totalStaking",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "userStakes", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "withdrawables",
+    data: BytesLike
+  ): Result;
 }
 
 export namespace DevWithdrawEvent {
@@ -216,6 +238,8 @@ export interface Storage extends BaseContract {
     "view"
   >;
 
+  totalStaking: TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+
   userStakes: TypedContractMethod<
     [arg0: BigNumberish, arg1: AddressLike],
     [
@@ -226,6 +250,12 @@ export interface Storage extends BaseContract {
         withdrawTime: bigint;
       }
     ],
+    "view"
+  >;
+
+  withdrawables: TypedContractMethod<
+    [arg0: BytesLike],
+    [[bigint, bigint] & { withdrawAmount: bigint; maxWithdrawAmount: bigint }],
     "view"
   >;
 
@@ -254,6 +284,9 @@ export interface Storage extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "totalStaking"
+  ): TypedContractMethod<[arg0: AddressLike], [bigint], "view">;
+  getFunction(
     nameOrSignature: "userStakes"
   ): TypedContractMethod<
     [arg0: BigNumberish, arg1: AddressLike],
@@ -265,6 +298,13 @@ export interface Storage extends BaseContract {
         withdrawTime: bigint;
       }
     ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "withdrawables"
+  ): TypedContractMethod<
+    [arg0: BytesLike],
+    [[bigint, bigint] & { withdrawAmount: bigint; maxWithdrawAmount: bigint }],
     "view"
   >;
 
