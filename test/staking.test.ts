@@ -74,7 +74,7 @@ describe("Staking", function () {
 
       expect(stakes.stakeToken).to.equal(usdt.target);
       expect(stakes.convertRate).to.equal(
-        ((300000 * 100 * 365) / 10) * 24 * 60 * 60
+        ((300000 * 100 * 365) / 15) * 24 * 60 * 60
       ); // 60 days in seconds
       expect(stakes.lockTimePeriod).to.equal(60 * 24 * 60 * 60); // 60 days in seconds
       expect(stakes.isActive).to.equal(true);
@@ -88,7 +88,7 @@ describe("Staking", function () {
 
       expect(stakes.stakeToken).to.equal(usdt.target);
       expect(stakes.convertRate).to.equal(
-        ((300000 * 100 * 365) / 10) * 24 * 60 * 60
+        ((300000 * 100 * 365) / 20) * 24 * 60 * 60
       ); // 120 days in seconds
       expect(stakes.lockTimePeriod).to.equal(120 * 24 * 60 * 60); // 120 days in seconds
       expect(stakes.isActive).to.equal(true);
@@ -558,7 +558,137 @@ describe("Staking", function () {
       expect(finalBalance).to.equal(expectedRewards);
     });
   });
+
+  describe("initializeV1", function () {
+    it("should revert if called twice", async function () {
+      const {contract, usdt, oah, addr1} = await loadFixture(deployDexFixture);
+      await contract.initializeV1();
+      await expect(contract.initializeV1()).to.be.reverted;
+    });
+  });
+
+  describe("increaseWithdrawable", function () {
+    it("should correctly increase withdrawAmount and maxWithdrawAmount", async function () {
+      const SEVEN_DAYS = 7 * 24 * 60 * 60; // 7 days
+      const {contract, owner, usdt} = await loadFixture(deployDexFixture);
+      const pid = 0;
+      const amount = ethers.parseEther("100");
+      const hashId = ethers.keccak256(
+        ethers.solidityPacked(["uint256", "address"], [pid, owner.address])
+      );
+      // User stakes
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+      await usdt.mint(owner, amount);
+      await usdt.approve(contract.target, amount);
+      await contract.newStake(pid, amount);
+
+      // Check withdrawables
+      const withdrawable = await contract.withdrawables(hashId);
+      expect(withdrawable.withdrawAmount).to.equal(0);
+      expect(withdrawable.maxWithdrawAmount).to.equal(ethers.parseEther("70")); // 70% of 100
+
+      // Fast forward time and withdraw
+      await ethers.provider.send("evm_increaseTime", [SEVEN_DAYS + 1]);
+      await ethers.provider.send("evm_mine");
+
+      await contract.withdraw(pid, amount);
+
+      // Check updated withdrawables
+      const updatedWithdrawable = await contract.withdrawables(hashId);
+      expect(updatedWithdrawable.withdrawAmount).to.equal(amount);
+      expect(updatedWithdrawable.maxWithdrawAmount).to.equal(
+        ethers.parseEther("70")
+      );
+    });
+
+    it("should allow withdrawal when withdrawAmount < maxWithdrawAmount", async function () {
+      const SEVEN_DAYS = 7 * 24 * 60 * 60; // 7 days
+      const {contract, owner, usdt} = await loadFixture(deployDexFixture);
+      const pid = 0;
+      const amount = ethers.parseEther("50");
+      const hashId = ethers.keccak256(
+        ethers.solidityPacked(["uint256", "address"], [pid, owner.address])
+      );
+
+      // User stakes
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+      await usdt.mint(owner, amount);
+      await usdt.approve(contract.target, amount);
+      await contract.newStake(pid, amount);
+
+      // Fast forward time
+      await ethers.provider.send("evm_increaseTime", [SEVEN_DAYS + 1]);
+      await ethers.provider.send("evm_mine");
+
+      // First withdrawal (should succeed)
+      await expect(contract.withdraw(pid, amount))
+        .to.emit(contract, "UserWithdrew")
+        .withArgs(owner.address, pid, amount);
+
+      // Check withdrawables
+      const withdrawable = await contract.withdrawables(hashId);
+      expect(withdrawable.withdrawAmount).to.equal(amount);
+      expect(withdrawable.maxWithdrawAmount).to.equal(ethers.parseEther("35")); // 70% of 50
+    });
+
+    it("should revert when withdrawAmount >= maxWithdrawAmount", async function () {
+      const SEVEN_DAYS = 7 * 24 * 60 * 60; // 7 days
+      const {contract, owner, usdt} = await loadFixture(deployDexFixture);
+      const pid = 0;
+      const amount = ethers.parseEther("100");
+      const smallerAmount = ethers.parseEther("80");
+
+      // User stakes
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+      await usdt.mint(owner, amount);
+      await usdt.approve(contract.target, amount);
+      await contract.newStake(pid, amount);
+
+      // Fast forward time
+      await ethers.provider.send("evm_increaseTime", [SEVEN_DAYS + 1]);
+      await ethers.provider.send("evm_mine");
+
+      // Withdraw more than 70%
+      await contract.withdraw(pid, smallerAmount);
+
+      // Try to withdraw again (should fail)
+      await expect(contract.withdraw(pid, amount - smallerAmount)).to.be
+        .reverted;
+    });
+
+    it("should correctly track multiple stakes and withdrawals", async function () {
+      const SEVEN_DAYS = 7 * 24 * 60 * 60; // 7 days
+      const {contract, owner, usdt} = await loadFixture(deployDexFixture);
+      const pid = 0;
+      const amount1 = ethers.parseEther("100");
+      const amount2 = ethers.parseEther("50");
+      const hashId = ethers.keccak256(
+        ethers.solidityPacked(["uint256", "address"], [pid, owner.address])
+      );
+
+      await contract.setStakes(0, usdt.target); // Period.Days_7 = 0
+      await usdt.mint(owner, amount1 + amount2);
+      await usdt.approve(contract.target, amount1 + amount2);
+      // First stake
+      await contract.newStake(pid, amount1);
+      // Second stake
+      await contract.newStake(pid, amount2);
+
+      // Check initial withdrawables
+      let withdrawable = await contract.withdrawables(hashId);
+      expect(withdrawable.maxWithdrawAmount).to.equal(ethers.parseEther("105")); // 70% of 150
+
+      // Fast forward time
+      await ethers.provider.send("evm_increaseTime", [SEVEN_DAYS + 1]);
+      await ethers.provider.send("evm_mine");
+
+      // Partial withdrawal
+      await contract.withdraw(pid, amount1);
+
+      // Check updated withdrawables
+      withdrawable = await contract.withdrawables(hashId);
+      expect(withdrawable.withdrawAmount).to.equal(amount1);
+      expect(withdrawable.maxWithdrawAmount).to.equal(ethers.parseEther("105"));
+    });
+  });
 });
-//0x2AD376409E191501Be9557021E4E56041f07da15
-//0x0000000000000000000000000000000000000000
-//0.001000000000000000
